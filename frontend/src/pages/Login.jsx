@@ -32,7 +32,7 @@ const Login = () => {
             } else if (response.user.role === "lecturer") {
                 navigate("/lecturer/dashboard");
             } else {
-                navigate("/student/dashboard");
+                navigate("/student/welcome");
             }
         } catch (error) {
             setError(error.response?.data?.message || "Login failed");
