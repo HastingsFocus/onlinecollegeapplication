@@ -1,33 +1,26 @@
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinary.js";
 
-
-const storage = new CloudinaryStorage({
-
-    cloudinary: cloudinary,
-
-    params: {
-
-        folder: "college-applications",
-
-        allowed_formats: [
-            "jpg",
-            "jpeg",
-            "png",
-            "pdf"
-        ]
-
-    }
-
-});
-
+const storage = multer.memoryStorage();
 
 const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB per file
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/pdf",
+    ];
 
-    storage: storage
-
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF, JPG, JPEG and PNG files are allowed."));
+    }
+  },
 });
-
 
 export default upload;

@@ -1,4 +1,7 @@
 import StudentApplication from "../models/StudentApplication.js";
+import Program from "../models/Program.js";
+import uploadToCloudinary from "../utils/uploadToCloudinary.js";
+
 
 const getApplication = async (userId) => {
   const application = await StudentApplication.findOne({ userId });
@@ -192,44 +195,156 @@ export const updateNextOfKin = async (req, res) => {
   }
 };
 
-export const uploadDocuments = async (req, res) => {
-  try {
-    const application = await getDraftApplication(req.user.id);
-    const { documentType, fileName, fileUrl } = req.body;
 
-    if (!documentType || !fileName || !fileUrl) {
+
+export const uploadDocuments = async (req, res) => {
+  console.time("UPLOAD");
+
+  try {
+    console.timeLog("UPLOAD", "🚀 Controller started");
+
+    const application = await getDraftApplication(req.user.id);
+
+    console.timeLog("UPLOAD", "✅ Draft application loaded");
+
+    const files = req.files;
+    let documentTypes = req.body.documentTypes;
+
+    if (!files || files.length === 0) {
+      console.timeEnd("UPLOAD");
+
       return res.status(400).json({
-        message: "Document type, file name and file URL are required."
+        message: "Please upload at least one document."
       });
     }
 
-    const existingDocument = application.documents.find(
-      document => document.documentType === documentType
+    if (!Array.isArray(documentTypes)) {
+      documentTypes = [documentTypes];
+    }
+
+    console.log(`📄 ${files.length} file(s) received`);
+
+    files.forEach((file) => {
+      console.log(
+        `   • ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
+      );
+    });
+
+    console.time("Cloudinary Upload");
+
+    // Upload all files in parallel
+    const uploadResults = await Promise.allSettled(
+      files.map(async (file, index) => {
+        console.log(`⬆️ Uploading ${file.originalname}...`);
+
+        const result = await uploadToCloudinary(file);
+
+        console.log(`✅ Uploaded ${file.originalname}`);
+
+        return {
+          documentType: documentTypes[index],
+          fileName: file.originalname,
+          fileUrl: result.secure_url,
+          cloudinaryPublicId: result.public_id,
+          uploadedAt: new Date()
+        };
+      })
     );
 
-    if (existingDocument) {
-      existingDocument.fileName = fileName;
-      existingDocument.fileUrl = fileUrl;
-      existingDocument.uploadedAt = new Date();
-    } else {
-      application.documents.push({
-        documentType,
-        fileName,
-        fileUrl,
-        uploadedAt: new Date()
+    console.timeEnd("Cloudinary Upload");
+
+    const successfulUploads = [];
+    const failedUploads = [];
+
+    uploadResults.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        successfulUploads.push(result.value);
+      } else {
+        console.error(
+          `❌ ${files[index].originalname} failed:`,
+          result.reason
+        );
+
+        failedUploads.push({
+          file: files[index].originalname,
+          documentType: documentTypes[index],
+          error: result.reason.message || "Upload failed"
+        });
+      }
+    });
+
+    console.log(
+      `✅ Successful uploads: ${successfulUploads.length}`
+    );
+
+    console.log(
+      `❌ Failed uploads: ${failedUploads.length}`
+    );
+
+    // Update MongoDB with successful uploads only
+    successfulUploads.forEach((uploadedDoc) => {
+      const existingDocument = application.documents.find(
+        (doc) => doc.documentType === uploadedDoc.documentType
+      );
+
+      if (existingDocument) {
+        console.log(`🔄 Updating ${uploadedDoc.documentType}`);
+
+        existingDocument.fileName = uploadedDoc.fileName;
+        existingDocument.fileUrl = uploadedDoc.fileUrl;
+        existingDocument.cloudinaryPublicId =
+          uploadedDoc.cloudinaryPublicId;
+        existingDocument.uploadedAt = uploadedDoc.uploadedAt;
+      } else {
+        console.log(`➕ Adding ${uploadedDoc.documentType}`);
+
+        application.documents.push(uploadedDoc);
+      }
+    });
+
+    // Only complete if every upload succeeded
+    if (failedUploads.length === 0) {
+      application.progress.documentsCompleted = true;
+    }
+
+    console.time("Mongo Save");
+
+    await application.save();
+
+    console.timeEnd("Mongo Save");
+
+    console.timeLog("UPLOAD", "💾 MongoDB updated");
+
+    console.timeEnd("UPLOAD");
+
+    // Return partial success if some uploads failed
+    if (failedUploads.length > 0) {
+      return res.status(207).json({
+        message: "Some documents uploaded successfully.",
+        uploaded: successfulUploads.length,
+        failed: failedUploads.length,
+        failedUploads,
+        documents: application.documents
       });
     }
 
-    application.progress.documentsCompleted = true;
-    await application.save();
-
-    res.status(200).json({
-      message: "Document uploaded successfully.",
+    return res.status(200).json({
+      message: "All documents uploaded successfully.",
+      uploaded: successfulUploads.length,
       documents: application.documents
     });
+
   } catch (error) {
-    const status = error.message.includes("submitted") ? 403 : 500;
-    res.status(status).json({
+    console.error("========== DOCUMENT UPLOAD ERROR ==========");
+    console.error(error);
+
+    if (error.stack) {
+      console.error(error.stack);
+    }
+
+    console.timeEnd("UPLOAD");
+
+    return res.status(500).json({
       message: error.message
     });
   }

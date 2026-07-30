@@ -1,298 +1,139 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import ApplicationStepper from "../../../components/student/ApplicationStepper";
 import Button from "../../../components/ui/Button";
-
-import {
-    getMyApplication,
-    submitApplication
-} from "../../../services/studentApplicationService";
+import { getMyApplication } from "../../../services/studentApplicationService";
 
 const ReviewApplication = () => {
+  const navigate = useNavigate();
+  const [application, setApplication] = useState(null);
 
-    const navigate = useNavigate();
+  useEffect(() => {
+    loadApplication();
+  }, []);
 
-    const [application, setApplication] = useState(null);
-
-    const [loading, setLoading] = useState(false);
-
-    const [confirmed, setConfirmed] = useState(false);
-
-    useEffect(() => {
-
-        loadApplication();
-
-    }, []);
-
-    const loadApplication = async () => {
-
-        try {
-
-            const data = await getMyApplication();
-
-            setApplication(data);
-
-        } catch (error) {
-
-            console.log(error);
-
-        }
-
-    };
-
-    const handleSubmit = async () => {
-
-        if (!confirmed) {
-
-            return alert(
-                "Please confirm that the information is correct."
-            );
-
-        }
-
-        try {
-
-            setLoading(true);
-
-            await submitApplication();
-
-            alert(
-                "Application submitted successfully."
-            );
-
-            navigate(
-                "/student/application/status"
-            );
-
-        } catch (error) {
-
-            alert(
-
-                error.response?.data?.message ||
-
-                "Submission failed."
-
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
-
-    };
-
-    if (!application) {
-
-        return <p>Loading...</p>;
-
+  const loadApplication = async () => {
+    try {
+      const data = await getMyApplication();
+      setApplication(data);
+    } catch (error) {
+      console.log(error);
     }
-
-    return (
-
-        <div>
-
-            <ApplicationStepper currentStep={7} />
-
-            <h2>Review Your Application</h2>
-
-            <p>
-
-                Please review all your information before submitting your application.
-
-            </p>
-
-            {/* PERSONAL */}
-
-            <hr />
-
-            <h3>Personal Information</h3>
-
-            <p><strong>Name:</strong> {application.personalInfo.firstName} {application.personalInfo.middleName} {application.personalInfo.lastName}</p>
-
-            <p><strong>Gender:</strong> {application.personalInfo.gender}</p>
-
-            <p><strong>Date of Birth:</strong> {application.personalInfo.dateOfBirth?.substring(0,10)}</p>
-
-            <p><strong>Nationality:</strong> {application.personalInfo.nationality}</p>
-
-            <p><strong>National ID:</strong> {application.personalInfo.nationalId}</p>
-
-            {/* CONTACT */}
-
-            <hr />
-
-            <h3>Contact Information</h3>
-
-            <p><strong>Email:</strong> {application.contactInfo.email}</p>
-
-            <p><strong>Phone:</strong> {application.contactInfo.phone}</p>
-
-            <p><strong>Alternative Phone:</strong> {application.contactInfo.alternativePhone}</p>
-
-            <p><strong>Address:</strong> {application.contactInfo.address}</p>
-
-            <p><strong>District:</strong> {application.contactInfo.district}</p>
-
-            {/* NEXT OF KIN */}
-
-            <hr />
-
-            <h3>Next of Kin</h3>
-
-            <p><strong>Name:</strong> {application.nextOfKin.fullName}</p>
-
-            <p><strong>Relationship:</strong> {application.nextOfKin.relationship}</p>
-
-            <p><strong>Phone:</strong> {application.nextOfKin.phone}</p>
-
-            <p><strong>Email:</strong> {application.nextOfKin.email}</p>
-
-            {/* ACADEMICS */}
-
-            <hr />
-
-            <h3>Academic Information</h3>
-
-            <p><strong>School:</strong> {application.academicInfo.schoolName}</p>
-
-            <p><strong>Examination Number:</strong> {application.academicInfo.examinationNumber}</p>
-
-            <p><strong>Year Completed:</strong> {application.academicInfo.yearCompleted}</p>
-
-            <h4>Subjects</h4>
-
-            <table border="1" cellPadding="8">
-
-                <thead>
-
-                    <tr>
-
-                        <th>Subject</th>
-
-                        <th>Grade</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {application.academicInfo.subjects?.map((subject,index)=>(
-
-                        <tr key={index}>
-
-                            <td>{subject.subject}</td>
-
-                            <td>{subject.grade}</td>
-
-                        </tr>
-
-                    ))}
-
-                </tbody>
-
-            </table>
-
-            {/* PROGRAMMES */}
-
-            <hr />
-
-            <h3>Programme Choices</h3>
-
-            <p>
-
-                <strong>1st Choice:</strong>
-
-                {" "}
-
-                {application.programChoice.firstChoice?.programName}
-
-            </p>
-
-            <p>
-
-                <strong>2nd Choice:</strong>
-
-                {" "}
-
-                {application.programChoice.secondChoice?.programName}
-
-            </p>
-
-            <p>
-
-                <strong>3rd Choice:</strong>
-
-                {" "}
-
-                {application.programChoice.thirdChoice?.programName}
-
-            </p>
-
-            {/* DOCUMENTS */}
-
-            <hr />
-
-            <h3>Uploaded Documents</h3>
-
-            {
-
-                application.documents.map((doc,index)=>(
-
-                    <p key={index}>
-
-                        ✅ {doc.documentType}
-
-                    </p>
-
-                ))
-
-            }
-
-            <hr />
-
-            <label>
-
-                <input
-
-                    type="checkbox"
-
-                    checked={confirmed}
-
-                    onChange={(e)=>
-
-                        setConfirmed(e.target.checked)
-
-                    }
-
-                />
-
-                {" "}
-
-                I confirm that all information provided is true and correct.
-
-            </label>
-
-            <br />
-
-            <br />
-
-            <Button
-
-                text="Submit Application"
-
-                loading={loading}
-
-                onClick={handleSubmit}
-
-            />
-
-        </div>
-
-    );
-
+  };
+
+  if (!application) {
+    return <p>Loading...</p>;
+  }
+
+  const sectionStyle = {
+    background: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "10px",
+    padding: "20px",
+    marginBottom: "25px",
+    boxShadow: "0 2px 8px rgba(0,0,0,.05)"
+  };
+
+  const headingStyle = {
+    color: "#2563eb",
+    marginBottom: "15px"
+  };
+
+  return (
+    <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+      <ApplicationStepper currentStep={7} />
+      <h2>Review Your Application</h2>
+      <p>Please review all the information below carefully before proceeding to payment.</p>
+
+      <div style={sectionStyle}>
+        <h3 style={headingStyle}>Personal Information</h3>
+        <p>
+          <strong>Name:</strong>{" "}
+          {application.personalInfo?.firstName}{" "}
+          {application.personalInfo?.middleName}{" "}
+          {application.personalInfo?.lastName}
+        </p>
+        <p><strong>Gender:</strong> {application.personalInfo?.gender || "Not provided"}</p>
+        <p>
+          <strong>Date of Birth:</strong>{" "}
+          {application.personalInfo?.dateOfBirth
+            ? application.personalInfo.dateOfBirth.substring(0, 10)
+            : "Not provided"}
+        </p>
+        <p><strong>Nationality:</strong> {application.personalInfo?.nationality || "Not provided"}</p>
+        <p><strong>National ID:</strong> {application.personalInfo?.nationalId || "Not provided"}</p>
+      </div>
+
+      <div style={sectionStyle}>
+        <h3 style={headingStyle}>Contact Information</h3>
+        <p><strong>Email:</strong> {application.contactInfo?.email || "Not provided"}</p>
+        <p><strong>Phone:</strong> {application.contactInfo?.phone || "Not provided"}</p>
+        <p><strong>Alternative Phone:</strong> {application.contactInfo?.alternativePhone || "Not provided"}</p>
+        <p><strong>Address:</strong> {application.contactInfo?.address || "Not provided"}</p>
+        <p><strong>District:</strong> {application.contactInfo?.district || "Not provided"}</p>
+      </div>
+
+      <div style={sectionStyle}>
+        <h3 style={headingStyle}>Next of Kin</h3>
+        <p><strong>Name:</strong> {application.nextOfKin?.fullName || "Not provided"}</p>
+        <p><strong>Relationship:</strong> {application.nextOfKin?.relationship || "Not provided"}</p>
+        <p><strong>Phone:</strong> {application.nextOfKin?.phone || "Not provided"}</p>
+        <p><strong>Email:</strong> {application.nextOfKin?.email || "Not provided"}</p>
+      </div>
+
+      <div style={sectionStyle}>
+        <h3 style={headingStyle}>Academic Information</h3>
+        <p><strong>School:</strong> {application.academicInfo?.schoolName || "Not provided"}</p>
+        <p><strong>Examination Number:</strong> {application.academicInfo?.examinationNumber || "Not provided"}</p>
+        <p><strong>Year Completed:</strong> {application.academicInfo?.yearCompleted || "Not provided"}</p>
+
+        <h4>Subjects</h4>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: "#2563eb", color: "#fff" }}>
+              <th style={{ padding: "10px" }}>Subject</th>
+              <th style={{ padding: "10px" }}>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {application.academicInfo?.subjects?.map((subject, index) => (
+              <tr key={index}>
+                <td style={{ border: "1px solid #ddd", padding: "10px" }}>
+                  {subject.subject}
+                </td>
+                <td style={{ border: "1px solid #ddd", padding: "10px" }}>
+                  {subject.grade}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={sectionStyle}>
+        <h3 style={headingStyle}>Programme Choices</h3>
+        <p><strong>1st Choice:</strong> {application.programChoice?.firstChoice?.name || "Not selected"}</p>
+        <p><strong>2nd Choice:</strong> {application.programChoice?.secondChoice?.name || "Not selected"}</p>
+        <p><strong>3rd Choice:</strong> {application.programChoice?.thirdChoice?.name || "Not selected"}</p>
+      </div>
+
+      <div style={sectionStyle}>
+        <h3 style={headingStyle}>Uploaded Documents</h3>
+        {application.documents?.length > 0 ? (
+          application.documents.map((doc, index) => (
+            <p key={index}>✅ {doc.documentType}</p>
+          ))
+        ) : (
+          <p>No documents uploaded.</p>
+        )}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "50px" }}>
+        <Button text="← Back" onClick={() => navigate("/student/application/documents")} />
+        <Button text="Proceed to Payment →" onClick={() => navigate(`/student/payment/${application._id}`)} />
+      </div>
+    </div>
+  );
 };
 
 export default ReviewApplication;

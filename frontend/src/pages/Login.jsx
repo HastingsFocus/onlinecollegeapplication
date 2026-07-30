@@ -21,26 +21,42 @@ const Login = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-        try {
-            const response = await loginUser(formData);
-            login(response.user, response.token);
-            if (response.user.role === "admin") {
-                navigate("/admin/dashboard");
-            } else if (response.user.role === "lecturer") {
-                navigate("/lecturer/dashboard");
-            } else {
-                navigate("/student/welcome");
-            }
-        } catch (error) {
-            setError(error.response?.data?.message || "Login failed");
-        } finally {
-            setLoading(false);
-        }
-    };
+    e.preventDefault();
 
+    setLoading(true);
+    setError("");
+
+    try {
+        const response = await loginUser(formData);
+
+        login(response.user, response.token);
+
+        if (response.user.role === "admin") {
+
+            navigate("/admin/dashboard");
+
+        } else if (response.user.role === "lecturer") {
+
+            navigate("/lecturer/dashboard");
+
+        } else if (response.user.role === "student") {
+
+            navigate("/student");
+
+        }
+
+    } catch (error) {
+
+        setError(
+            error.response?.data?.message || "Login failed"
+        );
+
+    } finally {
+
+        setLoading(false);
+
+    }
+};
     return (
         <div className="login-container">
             <div className="login-card">

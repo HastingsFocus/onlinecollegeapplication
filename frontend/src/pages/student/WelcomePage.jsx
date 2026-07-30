@@ -8,38 +8,20 @@ const WelcomePage = () => {
   const [loading, setLoading] = useState(false);
 
   const handleApplyNow = async () => {
+
     try {
 
         setLoading(true);
 
-        console.log("Creating application...");
-
-        const response = await createApplication();
-
-        console.log(response);
-
-        console.log("Navigating...");
+        await createApplication();
 
         navigate("/student/application/personal");
 
     } catch (error) {
 
-        console.log(error);
-
-        if (
-            error.response?.data?.message ===
-            "Application already exists"
-        ) {
-
-            navigate("/student/application/personal");
-
-            return;
-
-        }
-
         alert(
             error.response?.data?.message ||
-            "Unable to start application."
+            "Unable to create application."
         );
 
     } finally {
@@ -47,6 +29,7 @@ const WelcomePage = () => {
         setLoading(false);
 
     }
+
 };
 
   return (

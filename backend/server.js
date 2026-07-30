@@ -9,11 +9,18 @@ import userRoutes from "./routes/userRoutes.js";
 import programRoutes from "./routes/programRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+
 
 dotenv.config();
 connectDB();
 
 const app = express();
+
+app.use((req, res, next) => {
+    console.log("REQUEST:", req.method, req.originalUrl);
+    next();
+});
 
 app.use(express.json());
 app.use(cors());
@@ -24,6 +31,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/programs",programRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/payments", paymentRoutes);
+
 
 app.get("/", (req, res) => {
     res.json({

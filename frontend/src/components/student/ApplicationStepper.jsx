@@ -7,7 +7,9 @@ const steps = [
     "Academics",
     "Programs",
     "Documents",
-    "Review"
+    "Review",
+    "Payment",
+    "Submit Application"
 ];
 
 const ApplicationStepper = ({ currentStep }) => {

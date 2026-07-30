@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import documentTypes from "../constants/documentTypes.js";
 
 const studentApplicationSchema = new mongoose.Schema(
   {
@@ -6,230 +7,290 @@ const studentApplicationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true
+      unique: true,
     },
 
+    // ===========================================
+    // Personal Information
+    // ===========================================
     personalInfo: {
-      firstName: {
-        type: String,
-        trim: true,
-        maxlength: 100
-      },
-      middleName: {
-        type: String,
-        trim: true,
-        maxlength: 100
-      },
-      lastName: {
-        type: String,
-        trim: true,
-        maxlength: 100
-      },
-      gender: {
-        type: String,
-        enum: ["Male", "Female"]
-      },
-      dateOfBirth: {
-        type: Date
-      },
+      firstName: { type: String, trim: true, maxlength: 100 },
+      middleName: { type: String, trim: true, maxlength: 100 },
+      lastName: { type: String, trim: true, maxlength: 100 },
+      gender: { type: String, enum: ["Male", "Female"] },
+      dateOfBirth: Date,
       nationality: {
         type: String,
         trim: true,
-        default: "Malawian"
+        default: "Malawian",
       },
       nationalId: {
         type: String,
         trim: true,
-        maxlength: 50
-      }
+        maxlength: 50,
+      },
     },
 
+    // ===========================================
+    // Contact Information
+    // ===========================================
     contactInfo: {
       email: {
         type: String,
         trim: true,
-        lowercase: true
+        lowercase: true,
       },
       phone: {
         type: String,
-        trim: true
+        trim: true,
       },
       alternativePhone: {
         type: String,
-        trim: true
+        trim: true,
       },
       address: {
         type: String,
-        trim: true
+        trim: true,
       },
       district: {
         type: String,
-        trim: true
+        trim: true,
       },
       country: {
         type: String,
         trim: true,
-        default: "Malawi"
-      }
+        default: "Malawi",
+      },
     },
 
+    // ===========================================
+    // Next of Kin
+    // ===========================================
     nextOfKin: {
       fullName: {
         type: String,
-        trim: true
+        trim: true,
       },
       relationship: {
         type: String,
-        trim: true
+        trim: true,
       },
       phone: {
         type: String,
-        trim: true
+        trim: true,
       },
       email: {
         type: String,
         trim: true,
-        lowercase: true
-      }
+        lowercase: true,
+      },
     },
 
+    // ===========================================
+    // Academic Information
+    // ===========================================
     academicInfo: {
       schoolName: {
         type: String,
-        trim: true
+        trim: true,
       },
       examinationNumber: {
         type: String,
-        trim: true
+        trim: true,
       },
       yearCompleted: {
         type: Number,
         min: 1950,
-        max: new Date().getFullYear()
+        max: new Date().getFullYear(),
       },
       subjects: [
         {
           subject: {
             type: String,
-            trim: true
+            trim: true,
           },
           grade: {
             type: String,
-            trim: true
-          }
-        }
+            trim: true,
+          },
+        },
       ],
       certificate: {
         type: String,
-        trim: true
-      }
+        trim: true,
+      },
     },
 
+    // ===========================================
+    // Programme Choices
+    // ===========================================
     programChoice: {
       firstChoice: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Program"
+        ref: "Program",
       },
       secondChoice: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Program"
+        ref: "Program",
       },
       thirdChoice: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Program"
-      }
+        ref: "Program",
+      },
     },
 
+    // ===========================================
+    // Uploaded Documents
+    // ===========================================
     documents: [
       {
         documentType: {
           type: String,
-          enum: [
-            "Passport Photo",
-            "National ID",
-            "MSCE Certificate",
-            "Academic Transcript",
-            "Other"
-          ]
+          enum: documentTypes,
+          required: true,
         },
         fileName: {
           type: String,
-          trim: true
+          trim: true,
+          required: true,
         },
         fileUrl: {
           type: String,
-          trim: true
+          trim: true,
+          required: true,
+        },
+        cloudinaryPublicId: {
+          type: String,
+          trim: true,
         },
         uploadedAt: {
           type: Date,
-          default: Date.now
-        }
-      }
+          default: Date.now,
+        },
+      },
     ],
 
+    // ===========================================
+    // Progress Tracking
+    // ===========================================
     progress: {
       personalCompleted: {
         type: Boolean,
-        default: false
+        default: false,
       },
       contactCompleted: {
         type: Boolean,
-        default: false
+        default: false,
       },
       nextOfKinCompleted: {
         type: Boolean,
-        default: false
+        default: false,
       },
       academicCompleted: {
         type: Boolean,
-        default: false
+        default: false,
       },
       programCompleted: {
         type: Boolean,
-        default: false
+        default: false,
       },
       documentsCompleted: {
         type: Boolean,
-        default: false
-      }
+        default: false,
+      },
     },
 
+    // ===========================================
+    // Application Status
+    // ===========================================
     status: {
       type: String,
-      enum: ["Draft", "Submitted", "Under Review", "Accepted", "Rejected"],
-      default: "Draft"
+      enum: [
+        "Draft",
+        "Submitted",
+        "Under Review",
+        "Accepted",
+        "Rejected",
+      ],
+      default: "Draft",
+    },
+
+    applicationNumber: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
+
+    admissionYear: {
+      type: Number,
+      default: new Date().getFullYear(),
+    },
+
+    applicationFee: {
+      type: Number,
+      default: 25000,
+    },
+
+    // ===========================================
+    // Payment Information
+    // ===========================================
+    paymentStatus: {
+      type: String,
+      enum: [
+        "Pending",
+        "Successful",
+        "Failed",
+        "Refunded",
+      ],
+      default: "Pending",
     },
 
     paymentInfo: {
       paid: {
         type: Boolean,
-        default: false
+        default: false,
       },
+
       transactionReference: {
         type: String,
-        trim: true
+        default: "",
       },
+
       paymentMethod: {
         type: String,
-        enum: ["Airtel Money", "TNM Mpamba", "Bank", "Card"]
-      }
+        default: "",
+      },
     },
 
+    payment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+
+    // ===========================================
+    // Review Information
+    // ===========================================
     submittedAt: Date,
+
     reviewedAt: Date,
+
     reviewedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
     },
+
     remarks: {
       type: String,
       trim: true,
-      maxlength: 1000
-    }
+      maxlength: 1000,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
-export default mongoose.model("StudentApplication", studentApplicationSchema);
+export default mongoose.model(
+  "StudentApplication",
+  studentApplicationSchema
+);
