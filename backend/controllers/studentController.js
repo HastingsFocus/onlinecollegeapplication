@@ -1,13 +1,33 @@
 import StudentApplication from "../models/StudentApplication.js";
 import Program from "../models/Program.js";
 import uploadToCloudinary from "../utils/uploadToCloudinary.js";
+import { updateApplicationProgress } from "../utils/updateApplicationProgress.js";
+import Intake from "../models/Intake.js";
+
 
 
 const getApplication = async (userId) => {
-  const application = await StudentApplication.findOne({ userId });
-  if (!application) {
-    throw new Error("Application not found");
+  const today = new Date();
+
+  const activeIntake = await Intake.findOne({
+    status: "Published",
+    applicationStartDate: { $lte: today },
+    applicationEndDate: { $gte: today },
+  });
+
+  if (!activeIntake) {
+    throw new Error("There is no active intake.");
   }
+
+  const application = await StudentApplication.findOne({
+    userId,
+    intake: activeIntake._id,
+  });
+
+  if (!application) {
+    throw new Error("Application not found.");
+  }
+
   return application;
 };
 
@@ -45,37 +65,77 @@ const validateContactInformation = (data) => {
 
 export const createApplication = async (req, res) => {
   try {
+    // Find the currently active intake
+    const today = new Date();
+
+    const activeIntake = await Intake.findOne({
+      status: "Published",
+      applicationStartDate: { $lte: today },
+      applicationEndDate: { $gte: today },
+    });
+
+    if (!activeIntake) {
+      return res.status(400).json({
+        success: false,
+        message: "There is no active intake. Applications are currently closed.",
+      });
+    }
+
+    // Check if the student already has an application for this intake
     const existingApplication = await StudentApplication.findOne({
-      userId: req.user.id
+      userId: req.user.id,
+      intake: activeIntake._id,
     });
 
     if (existingApplication) {
       return res.status(400).json({
-        message: "Application already exists."
+        success: false,
+        message: "You have already created an application for this intake.",
       });
     }
 
+    // Create a new application
     const application = await StudentApplication.create({
       userId: req.user.id,
-      status: "Draft"
+      intake: activeIntake._id,
+      status: "Draft",
+      lastActivity: new Date(),
     });
 
     res.status(201).json({
+      success: true,
       message: "Application created successfully.",
-      application
+      application,
     });
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      success: false,
+      message: error.message,
     });
   }
 };
 
 export const getMyApplication = async (req, res) => {
   try {
+    const today = new Date();
+
+    const activeIntake = await Intake.findOne({
+      status: "Published",
+      applicationStartDate: { $lte: today },
+      applicationEndDate: { $gte: today },
+    });
+
+    if (!activeIntake) {
+      return res.status(404).json({
+        message: "There is no active intake.",
+      });
+    }
+
     const application = await StudentApplication.findOne({
-      userId: req.user.id
+      userId: req.user.id,
+      intake: activeIntake._id,
     })
+      .populate("intake")
       .populate("programChoice.firstChoice")
       .populate("programChoice.secondChoice")
       .populate("programChoice.thirdChoice")
@@ -83,14 +143,14 @@ export const getMyApplication = async (req, res) => {
 
     if (!application) {
       return res.status(404).json({
-        message: "Application not found."
+        message: "Application not found.",
       });
     }
 
     res.status(200).json(application);
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -111,8 +171,12 @@ export const updatePersonalInfo = async (req, res) => {
       ...req.body
     };
 
-    application.progress.personalCompleted = true;
-    await application.save();
+    updateApplicationProgress(
+  application,
+  "personalCompleted"
+);
+
+await application.save();
 
     res.status(200).json({
       message: "Personal information updated successfully.",
@@ -142,7 +206,10 @@ export const updateContactInfo = async (req, res) => {
       ...req.body
     };
 
-    application.progress.contactCompleted = true;
+updateApplicationProgress(
+  application,
+  "contactCompleted"
+);
     await application.save();
 
     res.status(200).json({
@@ -180,7 +247,10 @@ export const updateNextOfKin = async (req, res) => {
       ...req.body
     };
 
-    application.progress.nextOfKinCompleted = true;
+    updateApplicationProgress(
+  application,
+  "nextOfKinCompleted"
+);
     await application.save();
 
     res.status(200).json({
@@ -198,21 +268,12 @@ export const updateNextOfKin = async (req, res) => {
 
 
 export const uploadDocuments = async (req, res) => {
-  console.time("UPLOAD");
-
   try {
-    console.timeLog("UPLOAD", "🚀 Controller started");
-
     const application = await getDraftApplication(req.user.id);
-
-    console.timeLog("UPLOAD", "✅ Draft application loaded");
-
     const files = req.files;
     let documentTypes = req.body.documentTypes;
 
     if (!files || files.length === 0) {
-      console.timeEnd("UPLOAD");
-
       return res.status(400).json({
         message: "Please upload at least one document."
       });
@@ -222,25 +283,9 @@ export const uploadDocuments = async (req, res) => {
       documentTypes = [documentTypes];
     }
 
-    console.log(`📄 ${files.length} file(s) received`);
-
-    files.forEach((file) => {
-      console.log(
-        `   • ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
-      );
-    });
-
-    console.time("Cloudinary Upload");
-
-    // Upload all files in parallel
     const uploadResults = await Promise.allSettled(
       files.map(async (file, index) => {
-        console.log(`⬆️ Uploading ${file.originalname}...`);
-
         const result = await uploadToCloudinary(file);
-
-        console.log(`✅ Uploaded ${file.originalname}`);
-
         return {
           documentType: documentTypes[index],
           fileName: file.originalname,
@@ -251,8 +296,6 @@ export const uploadDocuments = async (req, res) => {
       })
     );
 
-    console.timeEnd("Cloudinary Upload");
-
     const successfulUploads = [];
     const failedUploads = [];
 
@@ -260,64 +303,36 @@ export const uploadDocuments = async (req, res) => {
       if (result.status === "fulfilled") {
         successfulUploads.push(result.value);
       } else {
-        console.error(
-          `❌ ${files[index].originalname} failed:`,
-          result.reason
-        );
-
         failedUploads.push({
           file: files[index].originalname,
           documentType: documentTypes[index],
-          error: result.reason.message || "Upload failed"
+          error: result.reason?.message || "Upload failed"
         });
       }
     });
 
-    console.log(
-      `✅ Successful uploads: ${successfulUploads.length}`
-    );
-
-    console.log(
-      `❌ Failed uploads: ${failedUploads.length}`
-    );
-
-    // Update MongoDB with successful uploads only
     successfulUploads.forEach((uploadedDoc) => {
       const existingDocument = application.documents.find(
-        (doc) => doc.documentType === uploadedDoc.documentType
+        doc => doc.documentType === uploadedDoc.documentType
       );
-
       if (existingDocument) {
-        console.log(`🔄 Updating ${uploadedDoc.documentType}`);
-
         existingDocument.fileName = uploadedDoc.fileName;
         existingDocument.fileUrl = uploadedDoc.fileUrl;
-        existingDocument.cloudinaryPublicId =
-          uploadedDoc.cloudinaryPublicId;
+        existingDocument.cloudinaryPublicId = uploadedDoc.cloudinaryPublicId;
         existingDocument.uploadedAt = uploadedDoc.uploadedAt;
       } else {
-        console.log(`➕ Adding ${uploadedDoc.documentType}`);
-
         application.documents.push(uploadedDoc);
       }
     });
 
-    // Only complete if every upload succeeded
     if (failedUploads.length === 0) {
-      application.progress.documentsCompleted = true;
+      updateApplicationProgress(application, "documentsCompleted");
+    } else {
+      application.lastActivity = new Date();
     }
-
-    console.time("Mongo Save");
 
     await application.save();
 
-    console.timeEnd("Mongo Save");
-
-    console.timeLog("UPLOAD", "💾 MongoDB updated");
-
-    console.timeEnd("UPLOAD");
-
-    // Return partial success if some uploads failed
     if (failedUploads.length > 0) {
       return res.status(207).json({
         message: "Some documents uploaded successfully.",
@@ -333,17 +348,7 @@ export const uploadDocuments = async (req, res) => {
       uploaded: successfulUploads.length,
       documents: application.documents
     });
-
   } catch (error) {
-    console.error("========== DOCUMENT UPLOAD ERROR ==========");
-    console.error(error);
-
-    if (error.stack) {
-      console.error(error.stack);
-    }
-
-    console.timeEnd("UPLOAD");
-
     return res.status(500).json({
       message: error.message
     });
@@ -376,7 +381,10 @@ export const updateAcademicInfo = async (req, res) => {
       ...req.body
     };
 
-    application.progress.academicCompleted = true;
+   updateApplicationProgress(
+  application,
+  "academicCompleted"
+);
     await application.save();
 
     res.status(200).json({
@@ -410,10 +418,25 @@ export const selectPrograms = async (req, res) => {
       });
     }
 
-    const programs = await Program.find({
-      _id: { $in: [firstChoice, secondChoice, thirdChoice] }
-    });
+    const intake = await Intake.findById(application.intake);
 
+const allowedPrograms = intake.availablePrograms.map(id => id.toString());
+
+const selectedPrograms = [
+    firstChoice,
+    secondChoice,
+    thirdChoice,
+];
+
+const invalidProgram = selectedPrograms.find(
+    id => !allowedPrograms.includes(id)
+);
+
+if (invalidProgram) {
+    return res.status(400).json({
+        message: "One or more selected programs are not available for this intake."
+    });
+}
     if (programs.length !== 3) {
       return res.status(404).json({
         message: "One or more selected programs do not exist."
@@ -421,7 +444,10 @@ export const selectPrograms = async (req, res) => {
     }
 
     application.programChoice = { firstChoice, secondChoice, thirdChoice };
-    application.progress.programCompleted = true;
+    updateApplicationProgress(
+  application,
+  "programCompleted"
+);
     await application.save();
 
     res.status(200).json({
@@ -471,8 +497,25 @@ export const submitApplication = async (req, res) => {
       });
     }
 
+
+    const intake = await Intake.findById(application.intake);
+
+const today = new Date();
+
+if (
+    intake.status !== "Published" ||
+    today < intake.applicationStartDate ||
+    today > intake.applicationEndDate
+) {
+    return res.status(400).json({
+        message: "This intake is no longer accepting applications.",
+    });
+}
+
     application.status = "Submitted";
     application.submittedAt = new Date();
+    application.lastActivity = new Date();
+
     await application.save();
 
     res.status(200).json({

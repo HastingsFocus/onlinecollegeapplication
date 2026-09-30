@@ -7,8 +7,14 @@ const studentApplicationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
+     
     },
+
+    intake: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Intake",
+    required: true,
+},
 
     // ===========================================
     // Personal Information
@@ -17,7 +23,10 @@ const studentApplicationSchema = new mongoose.Schema(
       firstName: { type: String, trim: true, maxlength: 100 },
       middleName: { type: String, trim: true, maxlength: 100 },
       lastName: { type: String, trim: true, maxlength: 100 },
-      gender: { type: String, enum: ["Male", "Female"] },
+      gender: {
+        type: String,
+        enum: ["Male", "Female"],
+      },
       dateOfBirth: Date,
       nationality: {
         type: String,
@@ -201,6 +210,24 @@ const studentApplicationSchema = new mongoose.Schema(
     },
 
     // ===========================================
+    // Reminder Tracking
+    // ===========================================
+    lastActivity: {
+      type: Date,
+      default: Date.now,
+    },
+
+    lastReminderSent: {
+      type: Date,
+      default: null,
+    },
+
+    reminderCount: {
+      type: Number,
+      default: 0,
+    },
+
+    // ===========================================
     // Application Status
     // ===========================================
     status: {
@@ -221,10 +248,7 @@ const studentApplicationSchema = new mongoose.Schema(
       trim: true,
     },
 
-    admissionYear: {
-      type: Number,
-      default: new Date().getFullYear(),
-    },
+    
 
     applicationFee: {
       type: Number,
@@ -250,12 +274,10 @@ const studentApplicationSchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
-
       transactionReference: {
         type: String,
         default: "",
       },
-
       paymentMethod: {
         type: String,
         default: "",
@@ -287,6 +309,16 @@ const studentApplicationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+studentApplicationSchema.index(
+  {
+    userId: 1,
+    intake: 1,
+  },
+  {
+    unique: true,
   }
 );
 

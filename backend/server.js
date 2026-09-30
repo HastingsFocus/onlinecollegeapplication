@@ -4,12 +4,17 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./config/db.js";
+import "./jobs/applicationReminderJob.js";
+
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import programRoutes from "./routes/programRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import intakeRoutes from "./routes/intakeRoutes.js";
+import admissionRoutes from "./routes/admissionsRoutes.js";
+
 
 
 dotenv.config();
@@ -32,7 +37,8 @@ app.use("/api/programs",programRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/payments", paymentRoutes);
-
+app.use("/api/intakes", intakeRoutes);
+app.use("/api/admissions", admissionRoutes);
 
 app.get("/", (req, res) => {
     res.json({

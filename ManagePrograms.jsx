@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../../layouts/DashboardLayout";
-import { getPrograms, deleteProgram } from "../../services/programService";
+import DashboardLayout from "./frontend/src/layouts/DashboardLayout";
+import { getPrograms, deleteProgram } from "./frontend/src/services/programService";
 
 const ManagePrograms = () => {
     const navigate = useNavigate();

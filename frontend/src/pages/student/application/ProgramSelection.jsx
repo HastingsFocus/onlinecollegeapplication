@@ -30,7 +30,7 @@ const ProgramSelection = () => {
 
         const response = await getPrograms();
 
-        console.log("PROGRAMS FROM API:", response);
+        
 
         setPrograms(response);
 
