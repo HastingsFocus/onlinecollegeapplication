@@ -136,9 +136,10 @@ export const getMyApplication = async (req, res) => {
       intake: activeIntake._id,
     })
       .populate("intake")
-      .populate("programChoice.firstChoice")
-      .populate("programChoice.secondChoice")
-      .populate("programChoice.thirdChoice")
+      .populate("programChoice.firstChoice", "name")
+      .populate("programChoice.secondChoice", "name")
+      .populate("programChoice.thirdChoice", "name")
+      .populate("programChoice.acceptedProgram", "name")
       .populate("reviewedBy", "firstName lastName email");
 
     if (!application) {
@@ -147,8 +148,31 @@ export const getMyApplication = async (req, res) => {
       });
     }
 
+    console.log("===== STUDENT APPLICATION STATUS =====");
+    console.log("Application ID:", application._id);
+    console.log("Status:", application.status);
+    console.log(
+      "First Choice:",
+      application.programChoice?.firstChoice
+    );
+    console.log(
+      "Second Choice:",
+      application.programChoice?.secondChoice
+    );
+    console.log(
+      "Third Choice:",
+      application.programChoice?.thirdChoice
+    );
+    console.log(
+      "Accepted Program:",
+      application.programChoice?.acceptedProgram
+    );
+    console.log("======================================");
+
     res.status(200).json(application);
   } catch (error) {
+    console.error("GET MY APPLICATION ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -402,62 +426,134 @@ export const updateAcademicInfo = async (req, res) => {
 export const selectPrograms = async (req, res) => {
   try {
     const application = await getDraftApplication(req.user.id);
-    const { firstChoice, secondChoice, thirdChoice } = req.body;
 
-    if (!firstChoice || !secondChoice || !thirdChoice) {
+    const {
+      firstChoice,
+      secondChoice,
+      thirdChoice
+    } = req.body;
+
+    if (!firstChoice) {
       return res.status(400).json({
-        message: "Please select all three program choices."
+        message: "Please select your first program choice."
       });
     }
 
-    if (firstChoice === secondChoice || 
-        firstChoice === thirdChoice || 
-        secondChoice === thirdChoice) {
+    const selectedPrograms = [
+      firstChoice,
+      secondChoice,
+      thirdChoice
+    ].filter(Boolean);
+
+    // Prevent selecting the same program more than once
+    if (new Set(selectedPrograms).size !== selectedPrograms.length) {
       return res.status(400).json({
         message: "Program choices must be different."
       });
     }
 
-    const intake = await Intake.findById(application.intake);
-
-const allowedPrograms = intake.availablePrograms.map(id => id.toString());
-
-const selectedPrograms = [
-    firstChoice,
-    secondChoice,
-    thirdChoice,
-];
-
-const invalidProgram = selectedPrograms.find(
-    id => !allowedPrograms.includes(id)
-);
-
-if (invalidProgram) {
-    return res.status(400).json({
-        message: "One or more selected programs are not available for this intake."
-    });
-}
-    if (programs.length !== 3) {
-      return res.status(404).json({
-        message: "One or more selected programs do not exist."
+    // Make sure the application has an intake
+    if (!application.intake) {
+      return res.status(400).json({
+        message: "No intake has been selected for this application."
       });
     }
 
-    application.programChoice = { firstChoice, secondChoice, thirdChoice };
+    // Get the intake and its allocated programs
+    const intake = await Intake.findById(application.intake)
+      .populate("availablePrograms");
+
+    if (!intake) {
+      return res.status(404).json({
+        message: "Application intake not found."
+      });
+    }
+
+    // Get IDs of programs allocated to this intake
+    const allowedPrograms = intake.availablePrograms.map(
+      (program) => program._id.toString()
+    );
+
+    // Make sure every selected program belongs to the intake
+    const invalidProgram = selectedPrograms.find(
+      (programId) => !allowedPrograms.includes(programId)
+    );
+
+    if (invalidProgram) {
+      return res.status(400).json({
+        message:
+          "One or more selected programs are not available for this intake."
+      });
+    }
+
+    // Save program choices
+    application.programChoice = {
+      firstChoice,
+      secondChoice: secondChoice || null,
+      thirdChoice: thirdChoice || null
+    };
+
     updateApplicationProgress(
-  application,
-  "programCompleted"
-);
+      application,
+      "programCompleted"
+    );
+
     await application.save();
 
     res.status(200).json({
       message: "Program choices updated successfully.",
       application
     });
+
   } catch (error) {
-    const status = error.message.includes("submitted") ? 403 : 500;
+    console.error("SELECT PROGRAMS ERROR:", error);
+
+    const status = error.message.includes("submitted")
+      ? 403
+      : 500;
+
     res.status(status).json({
       message: error.message
+    });
+  }
+};
+
+export const getApplicationPrograms = async (req, res) => {
+  try {
+    const application = await getDraftApplication(req.user.id);
+
+    console.log("===== APPLICATION PROGRAM DEBUG =====");
+    console.log("Application ID:", application?._id);
+    console.log("Application Intake:", application?.intake);
+
+    if (!application.intake) {
+      return res.status(400).json({
+        message: "No intake has been selected for this application.",
+      });
+    }
+
+    const intake = await Intake.findById(application.intake)
+      .populate("availablePrograms");
+
+    console.log("Intake ID:", intake?._id);
+    console.log("Intake Name:", intake?.name);
+    console.log("Available Programs:", intake?.availablePrograms);
+    console.log("====================================");
+
+    if (!intake) {
+      return res.status(404).json({
+        message: "Application intake not found.",
+      });
+    }
+
+    res.status(200).json({
+      programs: intake.availablePrograms,
+    });
+  } catch (error) {
+    console.error("GET APPLICATION PROGRAMS ERROR:", error);
+
+    res.status(500).json({
+      message: error.message || "Failed to load available programs.",
     });
   }
 };

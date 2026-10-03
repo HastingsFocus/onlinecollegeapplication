@@ -60,11 +60,13 @@ export const reviewApplication = async (
 // ===========================================
 export const acceptApplication = async (
   applicationId,
+  acceptedProgram,
   remarks = ""
 ) => {
   const response = await api.patch(
     `/admissions/applications/${applicationId}/accept`,
     {
+      acceptedProgram,
       remarks,
     }
   );

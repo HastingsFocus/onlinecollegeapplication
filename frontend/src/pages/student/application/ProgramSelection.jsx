@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import ApplicationStepper from "../../../components/student/ApplicationStepper";
 import Select from "../../../components/ui/Select";
 import Button from "../../../components/ui/Button";
-import { getPrograms } from "../../../services/programService";
 import {
+  getApplicationPrograms,
   getMyApplication,
-  selectPrograms
+  selectPrograms,
 } from "../../../services/studentApplicationService";
 
 const ProgramSelection = () => {
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [programs, setPrograms] = useState([]);
   const [formData, setFormData] = useState({
     firstChoice: "",
     secondChoice: "",
-    thirdChoice: ""
+    thirdChoice: "",
   });
 
   useEffect(() => {
@@ -24,32 +26,27 @@ const ProgramSelection = () => {
     loadApplication();
   }, []);
 
-  const loadPrograms = async()=>{
-
-    try{
-
-        const response = await getPrograms();
-
-        
-
-        setPrograms(response);
-
-    }catch(error){
-
-        console.log(error);
-
+  const loadPrograms = async () => {
+    try {
+      const response = await getApplicationPrograms();
+      setPrograms(response.programs || []);
+    } catch (error) {
+      console.error("Failed to load application programs:", error);
+      alert(
+        error.response?.data?.message || "Failed to load programs for this intake."
+      );
     }
-
-};
+  };
 
   const loadApplication = async () => {
     try {
       const application = await getMyApplication();
+
       if (application.programChoice) {
         setFormData({
           firstChoice: application.programChoice.firstChoice?._id || "",
           secondChoice: application.programChoice.secondChoice?._id || "",
-          thirdChoice: application.programChoice.thirdChoice?._id || ""
+          thirdChoice: application.programChoice.thirdChoice?._id || "",
         });
       }
     } catch (error) {
@@ -58,40 +55,35 @@ const ProgramSelection = () => {
   };
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const getAvailablePrograms = (field) => {
-    return programs.filter(program => {
+    return programs.filter((program) => {
       const selectedPrograms = [
         formData.firstChoice,
         formData.secondChoice,
-        formData.thirdChoice
+        formData.thirdChoice,
       ];
-      return !selectedPrograms.includes(program._id) || formData[field] === program._id;
+
+      return (
+        !selectedPrograms.includes(program._id) || formData[field] === program._id
+      );
     });
   };
 
   const formatPrograms = (field) => {
-
-    return getAvailablePrograms(field)
-    .map(program => ({
-
-        value: program._id,
-
-        label: program.name
-
+    return getAvailablePrograms(field).map((program) => ({
+      value: program._id,
+      label: program.name,
     }));
+  };
 
-};
   const validateChoices = () => {
     const choices = [
       formData.firstChoice,
       formData.secondChoice,
-      formData.thirdChoice
+      formData.thirdChoice,
     ].filter(Boolean);
 
     if (new Set(choices).size !== choices.length) {
@@ -109,6 +101,7 @@ const ProgramSelection = () => {
 
   const savePrograms = async () => {
     if (!validateChoices()) return false;
+
     await selectPrograms(formData);
     return true;
   };
@@ -129,6 +122,7 @@ const ProgramSelection = () => {
     try {
       setLoading(true);
       const saved = await savePrograms();
+
       if (saved) {
         navigate("/student/application/documents");
       }
@@ -142,6 +136,7 @@ const ProgramSelection = () => {
   return (
     <div>
       <ApplicationStepper currentStep={5} />
+
       <h2>Programme Selection</h2>
       <p>Choose your programmes according to preference.</p>
 
@@ -153,6 +148,7 @@ const ProgramSelection = () => {
         options={formatPrograms("firstChoice")}
         required
       />
+
       <Select
         label="Second Choice"
         name="secondChoice"
@@ -160,6 +156,7 @@ const ProgramSelection = () => {
         onChange={handleChange}
         options={formatPrograms("secondChoice")}
       />
+
       <Select
         label="Third Choice"
         name="thirdChoice"
@@ -168,8 +165,18 @@ const ProgramSelection = () => {
         options={formatPrograms("thirdChoice")}
       />
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "30px" }}>
-        <Button text="← Back" onClick={() => navigate("/student/application/academic")} />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: "30px",
+        }}
+      >
+        <Button
+          text="← Back"
+          onClick={() => navigate("/student/application/academic")}
+        />
+
         <div style={{ display: "flex", gap: "15px" }}>
           <Button text="Save" loading={loading} onClick={handleSave} />
           <Button text="Save & Continue" loading={loading} onClick={handleContinue} />

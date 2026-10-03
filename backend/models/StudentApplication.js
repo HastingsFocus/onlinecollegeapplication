@@ -146,6 +146,11 @@ const studentApplicationSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Program",
       },
+       acceptedProgram: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Program",
+      default: null,
+  },
     },
 
     // ===========================================
@@ -243,11 +248,9 @@ const studentApplicationSchema = new mongoose.Schema(
     },
 
     applicationNumber: {
-      type: String,
-      unique: true,
-      trim: true,
-    },
-
+  type: String,
+  trim: true,
+},
     
 
     applicationFee: {
@@ -313,12 +316,17 @@ const studentApplicationSchema = new mongoose.Schema(
 );
 
 studentApplicationSchema.index(
-  {
-    userId: 1,
-    intake: 1,
-  },
+  { userId: 1, intake: 1 },
+  { unique: true }
+);
+
+studentApplicationSchema.index(
+  { applicationNumber: 1 },
   {
     unique: true,
+    partialFilterExpression: {
+      applicationNumber: { $type: "string" },
+    },
   }
 );
 

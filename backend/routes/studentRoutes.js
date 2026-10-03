@@ -8,13 +8,19 @@ import {
   updateAcademicInfo,
   selectPrograms,
   uploadDocuments,
-  submitApplication
+  submitApplication,
+  getApplicationPrograms
 } from "../controllers/studentController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import upload from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
+router.get(
+  "/programs",
+  protect,
+  getApplicationPrograms
+);
 router.post("/application", protect, createApplication);
 router.get("/application", protect, getMyApplication);
 router.put("/application/personal", protect, updatePersonalInfo);

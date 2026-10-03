@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import Button from "../../../components/ui/Button";
-import { getMyApplication } from "../../../services/studentApplicationService";
+import {
+  getMyApplication,
+} from "../../../services/studentApplicationService";
 
 const ApplicationStatus = () => {
   const navigate = useNavigate();
+
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,138 +18,191 @@ const ApplicationStatus = () => {
 
   const loadApplication = async () => {
     try {
+      setLoading(true);
+
       const data = await getMyApplication();
+
       setApplication(data);
     } catch (error) {
-      console.log(error);
+      console.error("Failed to load application:", error);
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to load application status."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Submitted": return "#f59e0b";
-      case "Under Review": return "#2563eb";
-      case "Accepted": return "#16a34a";
-      case "Rejected": return "#dc2626";
-      default: return "#6b7280";
-    }
-  };
-
   if (loading) {
-    return <h2>Loading application...</h2>;
+    return (
+      <div style={{ padding: "30px" }}>
+        <p>Loading application status...</p>
+      </div>
+    );
   }
 
   if (!application) {
-    return <h2>No application found.</h2>;
+    return (
+      <div style={{ padding: "30px" }}>
+        <h2>Application Status</h2>
+        <p>No application found.</p>
+      </div>
+    );
   }
 
-  return (
-    <div style={{ maxWidth: "1000px", margin: "40px auto", padding: "30px" }}>
-      <h1>Application Status</h1>
-      <p>Track the progress of your admission application.</p>
+  const acceptedProgram =
+    application.programChoice?.acceptedProgram;
 
-      <div style={{
-        background: "#fff",
-        padding: "25px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,.08)",
-        marginTop: "25px"
-      }}>
-        <h2>Current Status</h2>
-        <div style={{
-          display: "inline-block",
-          marginTop: "15px",
-          padding: "12px 20px",
-          borderRadius: "30px",
-          background: getStatusColor(application.status),
-          color: "#fff",
-          fontWeight: "bold"
-        }}>
+  return (
+    <div style={{ padding: "30px" }}>
+      <h2 style={{ marginBottom: "10px" }}>
+        Application Status
+      </h2>
+
+      <p style={{ marginBottom: "30px" }}>
+        View the status of your college application.
+      </p>
+
+      {/* Application Status */}
+      <div
+        style={{
+          padding: "20px",
+          border: "1px solid #ddd",
+          borderRadius: "10px",
+          marginBottom: "25px",
+        }}
+      >
+        <h3>Application Status</h3>
+
+        <p
+          style={{
+            fontWeight: "600",
+            fontSize: "18px",
+            marginTop: "10px",
+          }}
+        >
           {application.status}
-        </div>
-        <p style={{ marginTop: "25px" }}>
-          {application.status === "Submitted" &&
-            "Your application has been submitted successfully and is awaiting review."}
-          {application.status === "Under Review" &&
-            "Your application is currently being reviewed by the admissions office."}
-          {application.status === "Accepted" &&
-            "Congratulations! Your application has been accepted."}
-          {application.status === "Rejected" &&
-            "Unfortunately, your application was not successful."}
         </p>
       </div>
 
-      <div style={{
-        marginTop: "30px",
-        background: "#fff",
-        padding: "25px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,.08)"
-      }}>
-        <h2>Application Progress</h2>
-        <ul style={{ lineHeight: "2" }}>
-          <li>✅ Personal Information</li>
-          <li>✅ Contact Information</li>
-          <li>✅ Next of Kin</li>
-          <li>✅ Academic Information</li>
-          <li>✅ Programme Selection</li>
-          <li>✅ Documents Uploaded</li>
-          <li>✅ Payment Completed</li>
-          <li>✅ Application Submitted</li>
-        </ul>
-      </div>
+      {/* ACCEPTED PROGRAM */}
+      {application.status === "Accepted" && acceptedProgram && (
+        <div
+          style={{
+            padding: "25px",
+            borderRadius: "10px",
+            marginBottom: "25px",
+            border: "2px solid #22c55e",
+            backgroundColor: "#f0fdf4",
+          }}
+        >
+          <h3
+            style={{
+              color: "#15803d",
+              marginBottom: "10px",
+            }}
+          >
+            Admission Confirmed
+          </h3>
 
-      <div style={{
-        marginTop: "30px",
-        background: "#fff",
-        padding: "25px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,.08)"
-      }}>
-        <h2>Programme Choices</h2>
-        <p><strong>1st Choice:</strong> {application.programChoice?.firstChoice?.name || "Not Selected"}</p>
-        <p><strong>2nd Choice:</strong> {application.programChoice?.secondChoice?.name || "Not Selected"}</p>
-        <p><strong>3rd Choice:</strong> {application.programChoice?.thirdChoice?.name || "Not Selected"}</p>
-      </div>
+          <p
+            style={{
+              marginBottom: "8px",
+              color: "#166534",
+            }}
+          >
+            Congratulations! You have been accepted into:
+          </p>
 
-      <div style={{
-        marginTop: "30px",
-        background: "#fff",
-        padding: "25px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,.08)"
-      }}>
-        <h2>Uploaded Documents</h2>
-        {application.documents?.length > 0 ? (
-          application.documents.map((doc, index) => (
-            <p key={index}>✅ {doc.documentType}</p>
-          ))
-        ) : (
-          <p>No documents uploaded.</p>
+          <h2
+            style={{
+              color: "#166534",
+              margin: 0,
+            }}
+          >
+            {acceptedProgram.name}
+          </h2>
+        </div>
+      )}
+
+      {/* PROGRAMME CHOICES */}
+      <div
+        style={{
+          padding: "20px",
+          border: "1px solid #ddd",
+          borderRadius: "10px",
+          marginBottom: "25px",
+        }}
+      >
+        <h3 style={{ marginBottom: "20px" }}>
+          Programme Choices
+        </h3>
+
+        <p>
+          <strong>1st Choice:</strong>{" "}
+          {application.programChoice?.firstChoice?.name || "Not selected"}
+        </p>
+
+        <p>
+          <strong>2nd Choice:</strong>{" "}
+          {application.programChoice?.secondChoice?.name || "Not selected"}
+        </p>
+
+        <p>
+          <strong>3rd Choice:</strong>{" "}
+          {application.programChoice?.thirdChoice?.name || "Not selected"}
+        </p>
+
+        {/* Show accepted programme */}
+        {application.status === "Accepted" && acceptedProgram && (
+          <p
+            style={{
+              marginTop: "20px",
+              paddingTop: "15px",
+              borderTop: "1px solid #ddd",
+            }}
+          >
+            <strong>Accepted Programme:</strong>{" "}
+            {acceptedProgram.name}
+          </p>
         )}
       </div>
 
+      {/* REMARKS */}
       {application.remarks && (
-        <div style={{
-          marginTop: "30px",
-          background: "#fef2f2",
-          border: "1px solid #fecaca",
-          padding: "20px",
-          borderRadius: "10px"
-        }}>
-          <h2>Remarks</h2>
+        <div
+          style={{
+            padding: "20px",
+            border: "1px solid #ddd",
+            borderRadius: "10px",
+            marginBottom: "25px",
+          }}
+        >
+          <h3>Remarks</h3>
+
           <p>{application.remarks}</p>
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "40px" }}>
-        <Button text="Refresh" onClick={loadApplication} />
-        <Button text="Logout" onClick={() => {
-          sessionStorage.clear();
-          navigate("/login");
-        }} />
+      {/* ACTIONS */}
+      <div
+        style={{
+          display: "flex",
+          gap: "15px",
+          marginTop: "25px",
+        }}
+      >
+        <Button
+          text="Refresh"
+          onClick={loadApplication}
+        />
+
+        <Button
+          text="Back to Dashboard"
+          onClick={() => navigate("/student/dashboard")}
+        />
       </div>
     </div>
   );

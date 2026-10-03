@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import StudentApplication from "../models/StudentApplication.js";
 import Intake from "../models/Intake.js";
+import mongoose from "mongoose";
 
 export const getApplicationsByIntake = asyncHandler(async (req, res) => {
   const { intakeId } = req.params;
@@ -96,9 +97,10 @@ export const getApplicationDetails = asyncHandler(async (req, res) => {
   const application = await StudentApplication.findById(req.params.id)
     .populate("userId", "firstName lastName email")
     .populate("intake")
-    .populate("programChoice.firstChoice")
-    .populate("programChoice.secondChoice")
-    .populate("programChoice.thirdChoice")
+    .populate("programChoice.firstChoice", "name")
+    .populate("programChoice.secondChoice", "name")
+    .populate("programChoice.thirdChoice", "name")
+    .populate("programChoice.acceptedProgram", "name")
     .populate("reviewedBy", "firstName lastName email")
     .populate("payment");
 
@@ -107,9 +109,16 @@ export const getApplicationDetails = asyncHandler(async (req, res) => {
     throw new Error("Application not found.");
   }
 
+  console.log("===== APPLICATION DETAILS DEBUG =====");
+  console.log(
+    "Accepted Programme:",
+    application.programChoice?.acceptedProgram
+  );
+  console.log("=====================================");
+
   res.status(200).json({
     success: true,
-    application
+    application,
   });
 });
 
@@ -139,6 +148,8 @@ export const reviewApplication = asyncHandler(async (req, res) => {
 });
 
 export const acceptApplication = asyncHandler(async (req, res) => {
+  const { acceptedProgram, remarks } = req.body;
+
   const application = await StudentApplication.findById(req.params.id);
 
   if (!application) {
@@ -151,15 +162,111 @@ export const acceptApplication = asyncHandler(async (req, res) => {
     throw new Error("Only applications under review can be accepted.");
   }
 
+  if (!acceptedProgram) {
+    res.status(400);
+    throw new Error(
+      "Please select the programme the applicant is being admitted to."
+    );
+  }
+
+  /*
+   * Get the applicant's programme choices.
+   */
+  const choices = [
+    application.programChoice?.firstChoice,
+    application.programChoice?.secondChoice,
+    application.programChoice?.thirdChoice,
+  ].filter(Boolean);
+
+  const choiceIds = choices.map((programId) =>
+    programId.toString()
+  );
+
+  const acceptedProgramId = acceptedProgram.toString().trim();
+
+  /*
+   * Make sure the selected programme is one of
+   * the applicant's original choices.
+   */
+  if (!choiceIds.includes(acceptedProgramId)) {
+    console.log("===== ACCEPT PROGRAM DEBUG =====");
+    console.log("Selected programme:", acceptedProgramId);
+    console.log("Applicant choices:", choiceIds);
+    console.log("================================");
+
+    res.status(400);
+    throw new Error(
+      "The selected programme is not one of the applicant's programme choices."
+    );
+  }
+
+  /*
+   * Get the intake.
+   */
+  const intake = await Intake.findById(application.intake);
+
+  if (!intake) {
+    res.status(404);
+    throw new Error(
+      "The intake associated with this application was not found."
+    );
+  }
+
+  /*
+   * Make sure the programme is available
+   * for this intake.
+   */
+  const intakeProgramIds = intake.availablePrograms.map((programId) =>
+    programId.toString()
+  );
+
+  if (!intakeProgramIds.includes(acceptedProgramId)) {
+    res.status(400);
+    throw new Error(
+      "The selected programme is not available for this intake."
+    );
+  }
+
+  /*
+   * SAVE THE ACCEPTED PROGRAMME
+   */
+  application.programChoice.acceptedProgram = acceptedProgramId;
+
   application.status = "Accepted";
   application.reviewedBy = req.user.id;
   application.reviewedAt = new Date();
+
+  if (remarks?.trim()) {
+    application.remarks = remarks.trim();
+  }
+
   await application.save();
+
+  console.log("===== APPLICATION ACCEPTED =====");
+  console.log("Application ID:", application._id);
+  console.log("Accepted Programme ID:", application.programChoice.acceptedProgram);
+  console.log("Status:", application.status);
+  console.log("================================");
+
+  /*
+   * Get the updated application with all
+   * programme information populated.
+   */
+  const updatedApplication = await StudentApplication.findById(
+    application._id
+  )
+    .populate("userId", "firstName lastName email")
+    .populate("intake")
+    .populate("programChoice.firstChoice", "name")
+    .populate("programChoice.secondChoice", "name")
+    .populate("programChoice.thirdChoice", "name")
+    .populate("programChoice.acceptedProgram", "name")
+    .populate("reviewedBy", "firstName lastName email");
 
   res.status(200).json({
     success: true,
     message: "Application accepted successfully.",
-    application
+    application: updatedApplication,
   });
 });
 

@@ -27,6 +27,8 @@ import Intakes from "../pages/lecturer/admissions/Intakes";
 import CreateIntake from "../pages/lecturer/admissions/CreateIntake";
 import IntakeDetails from "../pages/lecturer/admissions/IntakeDetails";
 import EditIntake from "../pages/lecturer/admissions/EditIntake";
+import Applications from "../pages/lecturer/admissions/Applications";
+import ApplicationDetails from "../pages/lecturer/admissions/ApplicationDetails";
 
 // ===========================================
 // STUDENT PAGES
@@ -157,6 +159,27 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={["lecturer"]}>
               <EditIntake />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ===========================================
+            LECTURER ADMISSIONS - APPLICATIONS
+        =========================================== */}
+        <Route
+          path="/lecturer/admissions/intakes/:intakeId/applications"
+          element={
+            <ProtectedRoute allowedRoles={["lecturer"]}>
+              <Applications />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/lecturer/admissions/applications/:id"
+          element={
+            <ProtectedRoute allowedRoles={["lecturer"]}>
+              <ApplicationDetails />
             </ProtectedRoute>
           }
         />

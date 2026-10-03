@@ -44,3 +44,8 @@ export const submitApplication = async () => {
   const response = await api.put("/student/application/submit");
   return response.data;
 };
+
+export const getApplicationPrograms = async () => {
+  const response = await api.get("/student/programs");
+  return response.data;
+};
