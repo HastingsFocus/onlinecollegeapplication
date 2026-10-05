@@ -14,6 +14,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import intakeRoutes from "./routes/intakeRoutes.js";
 import admissionRoutes from "./routes/admissionsRoutes.js";
+import studentRegistryRoutes from "./routes/studentRegistryRoutes.js";
 
 
 
@@ -39,7 +40,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/intakes", intakeRoutes);
 app.use("/api/admissions", admissionRoutes);
-
+app.use("/api/students", studentRegistryRoutes);
 app.get("/", (req, res) => {
     res.json({
         message: "Online College Application API Running"

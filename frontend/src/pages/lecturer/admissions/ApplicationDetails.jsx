@@ -592,35 +592,38 @@ const ApplicationDetails = () => {
               gap: "16px",
             }}
           >
-            <ChoiceCard
-              number="1st Choice"
-              program={firstChoice?.name}
-              accepted={
-                acceptedChoice?._id &&
-                firstChoice?._id &&
-                acceptedChoice._id === firstChoice._id
-              }
-            />
+            {firstChoice && (
+  <ChoiceCard
+    program={firstChoice.name}
+    accepted={
+      acceptedChoice?._id &&
+      firstChoice?._id &&
+      acceptedChoice._id === firstChoice._id
+    }
+  />
+)}
 
-            <ChoiceCard
-              number="2nd Choice"
-              program={secondChoice?.name}
-              accepted={
-                acceptedChoice?._id &&
-                secondChoice?._id &&
-                acceptedChoice._id === secondChoice._id
-              }
-            />
+{secondChoice && (
+  <ChoiceCard
+    program={secondChoice.name}
+    accepted={
+      acceptedChoice?._id &&
+      secondChoice?._id &&
+      acceptedChoice._id === secondChoice._id
+    }
+  />
+)}
 
-            <ChoiceCard
-              number="3rd Choice"
-              program={thirdChoice?.name}
-              accepted={
-                acceptedChoice?._id &&
-                thirdChoice?._id &&
-                acceptedChoice._id === thirdChoice._id
-              }
-            />
+{thirdChoice && (
+  <ChoiceCard
+    program={thirdChoice.name}
+    accepted={
+      acceptedChoice?._id &&
+      thirdChoice?._id &&
+      acceptedChoice._id === thirdChoice._id
+    }
+  />
+)}
           </div>
 
           {/* =========================================

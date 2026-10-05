@@ -4,25 +4,27 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
+import ActivateAccount from "../pages/lecturer/ActivateAccount";
 import ProtectedRoute from "../components/ProtectedRoute";
 
-// ===========================================
-// ADMIN PAGES
-// ===========================================
+// ===============================
+// ADMIN
+// ===============================
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import CreateLecturer from "../pages/admin/CreateLecturer";
 
-// ===========================================
-// LECTURER PAGES
-// ===========================================
+// ===============================
+// LECTURER
+// ===============================
 import LecturerDashboard from "../pages/lecturer/LecturerDashboard";
-import ActivateAccount from "../pages/lecturer/ActivateAccount";
-import CreateProgram from "../pages/lecturer/CreateProgram";
-// import ManagePrograms from "../pages/lecturer/ManagePrograms";
-import EditProgram from "../pages/lecturer/EditProgram";
+import CreateProgram from "../pages/lecturer/programs/CreateProgram";
+import EditProgram from "../pages/lecturer/programs/EditProgram";
+import ManagePrograms from "../pages/lecturer/programs/ManagePrograms";
 import ManagePayments from "../pages/lecturer/payments/ManagePayments";
 
-// Lecturer Admissions
+// ===============================
+// LECTURER ADMISSIONS
+// ===============================
 import Intakes from "../pages/lecturer/admissions/Intakes";
 import CreateIntake from "../pages/lecturer/admissions/CreateIntake";
 import IntakeDetails from "../pages/lecturer/admissions/IntakeDetails";
@@ -30,9 +32,15 @@ import EditIntake from "../pages/lecturer/admissions/EditIntake";
 import Applications from "../pages/lecturer/admissions/Applications";
 import ApplicationDetails from "../pages/lecturer/admissions/ApplicationDetails";
 
-// ===========================================
-// STUDENT PAGES
-// ===========================================
+// ===============================
+// LECTURER STUDENT REGISTRY
+// ===============================
+import StudentRegistry from "../pages/lecturer/students/StudentRegistry";
+import AcceptedStudents from "../pages/lecturer/students/AcceptedStudents";
+
+// ===============================
+// STUDENT
+// ===============================
 import StudentLanding from "../pages/student/StudentLanding";
 import WelcomePage from "../pages/student/WelcomePage";
 import PersonalInformation from "../pages/student/application/PersonalInformation";
@@ -45,7 +53,9 @@ import ReviewApplication from "../pages/student/application/ReviewApplication";
 import ApplicationStatus from "../pages/student/application/ApplicationStatus";
 import SubmitApplication from "../pages/student/application/SubmitApplication";
 
-// Student Payments
+// ===============================
+// STUDENT PAYMENTS
+// ===============================
 import PaymentPage from "../pages/student/payment/PaymentPage";
 import PaymentStatus from "../pages/student/payment/PaymentStatus";
 import PaymentSuccess from "../pages/student/payment/PaymentSuccess";
@@ -54,19 +64,19 @@ const AppRoutes = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ===========================================
+        {/* =========================================
             PUBLIC ROUTES
-        =========================================== */}
-        <Route path="/" element={<Navigate to="/login" />} />
+        ========================================= */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/activate-account/:token" element={<ActivateAccount />} />
 
-        {/* ===========================================
+        {/* =========================================
             ADMIN ROUTES
-        =========================================== */}
+        ========================================= */}
         <Route
           path="/admin/dashboard"
           element={
@@ -75,7 +85,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/lecturers/create"
           element={
@@ -85,9 +94,9 @@ const AppRoutes = () => {
           }
         />
 
-        {/* ===========================================
-            LECTURER ROUTES
-        =========================================== */}
+        {/* =========================================
+            LECTURER DASHBOARD
+        ========================================= */}
         <Route
           path="/lecturer/dashboard"
           element={
@@ -97,6 +106,18 @@ const AppRoutes = () => {
           }
         />
 
+        {/* =========================================
+            LECTURER PROGRAMS
+        ========================================= */}
+        
+        <Route
+          path="/lecturer/programs"
+          element={
+            <ProtectedRoute allowedRoles={["lecturer"]}>
+              <ManagePrograms />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/lecturer/programs/create"
           element={
@@ -105,7 +126,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/lecturer/programs/edit/:id"
           element={
@@ -115,6 +135,9 @@ const AppRoutes = () => {
           }
         />
 
+        {/* =========================================
+            LECTURER PAYMENTS
+        ========================================= */}
         <Route
           path="/lecturer/payments"
           element={
@@ -124,9 +147,9 @@ const AppRoutes = () => {
           }
         />
 
-        {/* ===========================================
+        {/* =========================================
             LECTURER ADMISSIONS - INTAKES
-        =========================================== */}
+        ========================================= */}
         <Route
           path="/lecturer/admissions/intakes"
           element={
@@ -135,7 +158,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/lecturer/admissions/intakes/create"
           element={
@@ -144,7 +166,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/lecturer/admissions/intakes/:intakeId"
           element={
@@ -153,7 +174,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/lecturer/admissions/intakes/:intakeId/edit"
           element={
@@ -162,10 +182,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
-        {/* ===========================================
-            LECTURER ADMISSIONS - APPLICATIONS
-        =========================================== */}
         <Route
           path="/lecturer/admissions/intakes/:intakeId/applications"
           element={
@@ -174,7 +190,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/lecturer/admissions/applications/:id"
           element={
@@ -184,9 +199,29 @@ const AppRoutes = () => {
           }
         />
 
-        {/* ===========================================
-            STUDENT ROUTES
-        =========================================== */}
+        {/* =========================================
+            LECTURER STUDENT REGISTRY
+        ========================================= */}
+        <Route
+          path="/lecturer/students"
+          element={
+            <ProtectedRoute allowedRoles={["lecturer"]}>
+              <StudentRegistry />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/lecturer/students/accepted"
+          element={
+            <ProtectedRoute allowedRoles={["lecturer"]}>
+              <AcceptedStudents />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =========================================
+            STUDENT LANDING
+        ========================================= */}
         <Route
           path="/student"
           element={
@@ -196,6 +231,9 @@ const AppRoutes = () => {
           }
         />
 
+        {/* =========================================
+            STUDENT APPLICATION
+        ========================================= */}
         <Route
           path="/student/application/welcome"
           element={
@@ -204,7 +242,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/personal"
           element={
@@ -213,7 +250,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/contact"
           element={
@@ -222,7 +258,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/next-of-kin"
           element={
@@ -231,7 +266,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/academic"
           element={
@@ -240,7 +274,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/programs"
           element={
@@ -249,7 +282,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/documents"
           element={
@@ -258,7 +290,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/review"
           element={
@@ -267,37 +298,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
-        {/* ===========================================
-            STUDENT PAYMENTS
-        =========================================== */}
-        <Route
-          path="/student/payment/:applicationId"
-          element={
-            <ProtectedRoute allowedRoles={["student"]}>
-              <PaymentPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/student/payment/status/:applicationId"
-          element={
-            <ProtectedRoute allowedRoles={["student"]}>
-              <PaymentStatus />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/student/payment/success/:applicationId"
-          element={
-            <ProtectedRoute allowedRoles={["student"]}>
-              <PaymentSuccess />
-            </ProtectedRoute>
-          }
-        />
-
         <Route
           path="/student/application/submit"
           element={
@@ -306,7 +306,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/student/application/status"
           element={
@@ -316,10 +315,45 @@ const AppRoutes = () => {
           }
         />
 
-        {/* ===========================================
+        {/* =========================================
+            STUDENT PAYMENTS
+        ========================================= */}
+        <Route
+          path="/student/payment/:applicationId"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <PaymentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/payment/status/:applicationId"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <PaymentStatus />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/payment/success/:applicationId"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <PaymentSuccess />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =========================================
             404
-        =========================================== */}
-        <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+        ========================================= */}
+        <Route
+          path="*"
+          element={
+            <div style={{ padding: "40px", textAlign: "center" }}>
+              <h1>404 - Page Not Found</h1>
+            </div>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

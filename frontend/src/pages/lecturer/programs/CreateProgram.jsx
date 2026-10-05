@@ -1,15 +1,17 @@
 import { useState } from "react";
-import DashboardLayout from "../../layouts/DashboardLayout";
-import { createProgram } from "../../services/programService";
+import DashboardLayout from "../../../layouts/DashboardLayout";
+import { createProgram } from "../../../services/programService";
 
 const CreateProgram = () => {
     const [formData, setFormData] = useState({
         name: "",
+        code: "",
         description: "",
         requirements: "",
         department: "",
         duration: ""
     });
+
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
@@ -22,19 +24,29 @@ const CreateProgram = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
             setLoading(true);
+            setMessage("");
+
             const response = await createProgram(formData);
+
             setMessage(response.message);
+
             setFormData({
                 name: "",
+                code: "",
                 description: "",
                 requirements: "",
                 department: "",
                 duration: ""
             });
+
         } catch (error) {
-            setMessage(error.response?.data?.message || "Failed to create program");
+            setMessage(
+                error.response?.data?.message ||
+                "Failed to create program"
+            );
         } finally {
             setLoading(false);
         }
@@ -43,23 +55,31 @@ const CreateProgram = () => {
     return (
         <DashboardLayout>
             <h1>Create Program</h1>
-            <div style={{
-                background: "#fff",
-                padding: "30px",
-                borderRadius: "10px",
-                marginTop: "20px",
-                maxWidth: "700px",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-            }}>
+
+            <div
+                style={{
+                    background: "#fff",
+                    padding: "30px",
+                    borderRadius: "10px",
+                    marginTop: "20px",
+                    maxWidth: "700px",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+                }}
+            >
                 {message && (
-                    <p style={{
-                        marginBottom: "20px",
-                        color: "green"
-                    }}>
+                    <p
+                        style={{
+                            marginBottom: "20px",
+                            color: "green"
+                        }}
+                    >
                         {message}
                     </p>
                 )}
+
                 <form onSubmit={handleSubmit}>
+
+                    {/* PROGRAM NAME */}
                     <input
                         type="text"
                         name="name"
@@ -69,6 +89,22 @@ const CreateProgram = () => {
                         style={inputStyle}
                         required
                     />
+
+                    {/* PROGRAM CODE */}
+                    <input
+                        type="text"
+                        name="code"
+                        placeholder="Program Code (e.g. FST, BIT, BBA)"
+                        value={formData.code}
+                        onChange={handleChange}
+                        style={{
+                            ...inputStyle,
+                            textTransform: "uppercase"
+                        }}
+                        maxLength={10}
+                        required
+                    />
+
                     <textarea
                         name="description"
                         placeholder="Program Description"
@@ -77,6 +113,7 @@ const CreateProgram = () => {
                         style={textareaStyle}
                         required
                     />
+
                     <textarea
                         name="requirements"
                         placeholder="Entry Requirements"
@@ -85,6 +122,7 @@ const CreateProgram = () => {
                         style={textareaStyle}
                         required
                     />
+
                     <input
                         type="text"
                         name="department"
@@ -94,6 +132,7 @@ const CreateProgram = () => {
                         style={inputStyle}
                         required
                     />
+
                     <input
                         type="text"
                         name="duration"
@@ -103,13 +142,17 @@ const CreateProgram = () => {
                         style={inputStyle}
                         required
                     />
+
                     <button
                         type="submit"
                         disabled={loading}
                         style={buttonStyle}
                     >
-                        {loading ? "Creating Program..." : "Create Program"}
+                        {loading
+                            ? "Creating Program..."
+                            : "Create Program"}
                     </button>
+
                 </form>
             </div>
         </DashboardLayout>
