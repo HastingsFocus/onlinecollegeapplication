@@ -7,7 +7,8 @@ import {
   getRegistrationPreview,
   generateRegistrationNumbers,
   updateStudentStatus,
-  getStudentStatistics
+  getStudentStatistics,
+  sendAdmissionEmails
 } from "../controllers/studentRegistryController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -30,5 +31,6 @@ router.post("/:applicationId/register", protect, adminOrLecturer, registerStuden
 router.get("/", protect, adminOrLecturer, getRegisteredStudents);
 router.get("/:id", protect, adminOrLecturer, getStudentById);
 router.patch("/:id/status", protect, adminOrLecturer, updateStudentStatus);
+router.post("/send-admission-emails", protect, adminOrLecturer, sendAdmissionEmails);
 
 export default router;

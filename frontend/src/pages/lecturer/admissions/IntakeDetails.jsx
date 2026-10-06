@@ -8,6 +8,7 @@ import {
   publishIntake,
   closeIntake,
   archiveIntake,
+  getIntakeStatistics,
 } from "../../../services/admissionService";
 
 const IntakeDetails = () => {
@@ -15,20 +16,48 @@ const IntakeDetails = () => {
   const navigate = useNavigate();
 
   const [intake, setIntake] = useState(null);
+  const [applicationStats, setApplicationStats] = useState({
+    totalApplications: 0,
+    status: {
+      Draft: 0,
+      Submitted: 0,
+      "Under Review": 0,
+      Accepted: 0,
+      Rejected: 0,
+    },
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     loadIntake();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intakeId]);
 
   const loadIntake = async () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getIntakeById(intakeId);
-      setIntake(data.intake);
+
+      const [intakeResponse, statisticsResponse] = await Promise.all([
+        getIntakeById(intakeId),
+        getIntakeStatistics(intakeId),
+      ]);
+
+      setIntake(intakeResponse.intake);
+      setApplicationStats(
+        statisticsResponse.statistics || {
+          totalApplications: 0,
+          status: {
+            Draft: 0,
+            Submitted: 0,
+            "Under Review": 0,
+            Accepted: 0,
+            Rejected: 0,
+          },
+        }
+      );
     } catch (error) {
       console.error(error);
       setError(
@@ -40,13 +69,12 @@ const IntakeDetails = () => {
     }
   };
 
-  // Convert backend status values such as
-  // "Draft", "draft", or "DRAFT" into "DRAFT"
+  // Convert backend status values such as "Draft", "draft",
+  // or "DRAFT" into "DRAFT".
   const normalizeStatus = (status) => status?.toUpperCase();
 
   const formatDate = (date) => {
     if (!date) return "N/A";
-
     return new Date(date).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -70,7 +98,6 @@ const IntakeDetails = () => {
 
   const handlePublish = async () => {
     if (!window.confirm("Are you sure you want to publish this intake?")) return;
-
     try {
       setActionLoading(true);
       setError("");
@@ -86,7 +113,6 @@ const IntakeDetails = () => {
 
   const handleClose = async () => {
     if (!window.confirm("Are you sure you want to close this intake?")) return;
-
     try {
       setActionLoading(true);
       setError("");
@@ -102,7 +128,6 @@ const IntakeDetails = () => {
 
   const handleArchive = async () => {
     if (!window.confirm("Are you sure you want to archive this intake?")) return;
-
     try {
       setActionLoading(true);
       setError("");
@@ -132,7 +157,6 @@ const IntakeDetails = () => {
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
-
             <Button
               variant="secondary"
               onClick={() => navigate("/lecturer/admissions/intakes")}
@@ -155,7 +179,6 @@ const IntakeDetails = () => {
                 >
                   ← Back to Intakes
                 </button>
-
                 <h1 className="text-3xl font-bold">{intake.name}</h1>
                 <p className="mt-1 text-gray-500">
                   Academic Year: {intake.academicYear}
@@ -183,20 +206,23 @@ const IntakeDetails = () => {
               {/* Basic Information */}
               <div className="rounded-lg border bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold">Intake Information</h2>
-
                 <div className="mt-5 space-y-5">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Intake Name</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Intake Name
+                    </p>
                     <p className="mt-1 text-gray-900">{intake.name}</p>
                   </div>
-
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Academic Year</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Academic Year
+                    </p>
                     <p className="mt-1 text-gray-900">{intake.academicYear}</p>
                   </div>
-
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Description</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Description
+                    </p>
                     <p className="mt-1 whitespace-pre-wrap text-gray-700">
                       {intake.description || "No description provided."}
                     </p>
@@ -207,7 +233,6 @@ const IntakeDetails = () => {
               {/* Application Period */}
               <div className="rounded-lg border bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold">Application Period</h2>
-
                 <div className="mt-5 space-y-5">
                   <div>
                     <p className="text-sm font-medium text-gray-500">
@@ -217,7 +242,6 @@ const IntakeDetails = () => {
                       {formatDate(intake.applicationStartDate)}
                     </p>
                   </div>
-
                   <div>
                     <p className="text-sm font-medium text-gray-500">
                       Application Closes
@@ -226,7 +250,6 @@ const IntakeDetails = () => {
                       {formatDate(intake.applicationEndDate)}
                     </p>
                   </div>
-
                   <div>
                     <p className="text-sm font-medium text-gray-500">Created</p>
                     <p className="mt-1 text-gray-900">
@@ -241,7 +264,6 @@ const IntakeDetails = () => {
             {intake.createdBy && (
               <div className="rounded-lg border bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold">Created By</h2>
-
                 <div className="mt-4 grid gap-5 md:grid-cols-2">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Name</p>
@@ -249,10 +271,11 @@ const IntakeDetails = () => {
                       {intake.createdBy.firstName} {intake.createdBy.lastName}
                     </p>
                   </div>
-
                   <div>
                     <p className="text-sm font-medium text-gray-500">Email</p>
-                    <p className="mt-1 text-gray-900">{intake.createdBy.email}</p>
+                    <p className="mt-1 text-gray-900">
+                      {intake.createdBy.email}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -267,7 +290,6 @@ const IntakeDetails = () => {
                     Programs students can apply for in this intake.
                   </p>
                 </div>
-
                 <span className="text-sm font-medium text-gray-500">
                   {intake.availablePrograms?.length || 0} program
                   {intake.availablePrograms?.length === 1 ? "" : "s"}
@@ -281,8 +303,9 @@ const IntakeDetails = () => {
                       key={program._id}
                       className="rounded-lg border border-gray-200 p-4"
                     >
-                      <h3 className="font-medium text-gray-900">{program.name}</h3>
-
+                      <h3 className="font-medium text-gray-900">
+                        {program.name}
+                      </h3>
                       {program.code && (
                         <p className="mt-1 text-sm text-gray-500">
                           Code: {program.code}
@@ -310,22 +333,27 @@ const IntakeDetails = () => {
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-lg bg-gray-50 p-4">
                   <p className="text-sm text-gray-500">Total Applications</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">—</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-900">
+                    {applicationStats.totalApplications}
+                  </p>
                 </div>
-
                 <div className="rounded-lg bg-yellow-50 p-4">
                   <p className="text-sm text-gray-600">Pending</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">—</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-900">
+                    {applicationStats.status?.Submitted || 0}
+                  </p>
                 </div>
-
                 <div className="rounded-lg bg-blue-50 p-4">
                   <p className="text-sm text-gray-600">Under Review</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">—</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-900">
+                    {applicationStats.status?.["Under Review"] || 0}
+                  </p>
                 </div>
-
                 <div className="rounded-lg bg-green-50 p-4">
                   <p className="text-sm text-gray-600">Accepted</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">—</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-900">
+                    {applicationStats.status?.Accepted || 0}
+                  </p>
                 </div>
               </div>
 
@@ -351,7 +379,6 @@ const IntakeDetails = () => {
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-3">
-                  {/* Edit */}
                   <Button
                     variant="secondary"
                     onClick={() =>
@@ -368,7 +395,6 @@ const IntakeDetails = () => {
                       <Button onClick={handlePublish} disabled={actionLoading}>
                         {actionLoading ? "Processing..." : "Publish Intake"}
                       </Button>
-
                       <Button
                         variant="secondary"
                         onClick={handleArchive}

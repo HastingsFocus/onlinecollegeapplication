@@ -3,6 +3,7 @@ import Student from "../models/Student.js";
 import StudentApplication from "../models/StudentApplication.js";
 import Program from "../models/Program.js";
 import Intake from "../models/Intake.js";
+import sendEmail from "../utils/sendEmail.js";
 
 export const getAcceptedStudents = asyncHandler(async (req, res) => {
   const applications = await StudentApplication.find({
@@ -640,5 +641,179 @@ export const getStudentStatistics = asyncHandler(async (req, res) => {
       studentsByProgram,
       studentsByAcademicYear
     }
+  });
+});
+
+/**
+ * Build the admission confirmation email HTML for a student.
+ */
+const buildAdmissionEmailHtml = ({
+  studentName,
+  programName,
+  programCode,
+  intakeName,
+  academicYear,
+  registrationNumber,
+}) => `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <title>Admission Confirmation</title>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+      <div style="max-width:650px;margin:30px auto;background-color:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;">
+
+        <!-- HEADER -->
+        <div style="background-color:#0284c7;padding:28px 30px;text-align:center;">
+          <h1 style="margin:0;color:#ffffff;font-size:24px;">Admission Confirmation</h1>
+        </div>
+
+        <!-- CONTENT -->
+        <div style="padding:30px;">
+          <p style="font-size:16px;">Dear <strong>${studentName}</strong>,</p>
+
+          <p style="font-size:15px;line-height:1.7;">
+            We are pleased to inform you that you have been admitted to the following programme:
+          </p>
+
+          <!-- PROGRAMME -->
+          <div style="margin:25px 0;padding:20px;background-color:#f0f9ff;border-left:4px solid #0284c7;">
+            <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">ADMITTED PROGRAMME</p>
+            <h2 style="margin:0;color:#0369a1;font-size:20px;">${programName}</h2>
+            ${
+              programCode
+                ? `<p style="margin:6px 0 0;font-size:14px;color:#4b5563;">Programme Code: ${programCode}</p>`
+                : ""
+            }
+          </div>
+
+          <!-- DETAILS -->
+          <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+            <tr>
+              <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Intake</td>
+              <td style="padding:10px;border-bottom:1px solid #e5e7eb;">${intakeName}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Academic Year</td>
+              <td style="padding:10px;border-bottom:1px solid #e5e7eb;">${academicYear}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;">Registration Number</td>
+              <td style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:bold;color:#0369a1;">${registrationNumber}</td>
+            </tr>
+          </table>
+
+          <p style="font-size:15px;line-height:1.7;">
+            Congratulations on your admission. Further information regarding registration,
+            reporting dates, fees and other requirements will be communicated by the institution.
+          </p>
+
+          <p style="margin-top:30px;font-size:15px;">We look forward to welcoming you.</p>
+
+          <p style="margin-top:25px;font-size:15px;">
+            Kind regards,<br />
+            <strong>Admissions Office</strong>
+          </p>
+        </div>
+
+        <!-- FOOTER -->
+        <div style="padding:18px 30px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#6b7280;">
+            This is an automated admission notification. Please do not reply to this email.
+          </p>
+        </div>
+
+      </div>
+    </body>
+  </html>
+`;
+
+export const sendAdmissionEmails = asyncHandler(async (req, res) => {
+  const students = await Student.find({ status: "Registered" })
+    .populate("userId", "firstName lastName email")
+    .populate("program", "name code")
+    .populate("intake", "name academicYear")
+    .sort({ "userId.lastName": 1, "userId.firstName": 1 });
+
+  if (students.length === 0) {
+    res.status(400);
+    throw new Error(
+      "There are no registered students to send admission emails to."
+    );
+  }
+
+  let sentCount = 0;
+  let failedCount = 0;
+  const results = [];
+
+  for (const student of students) {
+    const firstName = student.userId?.firstName || "";
+    const lastName = student.userId?.lastName || "";
+    const email = student.userId?.email;
+
+    const studentName = `${firstName} ${lastName}`.trim() || "Student";
+    const programName = student.program?.name || "your admitted programme";
+    const programCode = student.program?.code || "";
+    const intakeName = student.intake?.name || "the selected intake";
+    const academicYear =
+      student.intake?.academicYear || student.academicYear || "";
+    const registrationNumber =
+      student.registrationNumber || "Not yet assigned";
+
+    // A student without an email cannot receive the admission email.
+    if (!email) {
+      failedCount++;
+      results.push({
+        studentId: student._id,
+        name: studentName,
+        email: null,
+        status: "Failed",
+        reason: "Student does not have an email address.",
+      });
+      continue;
+    }
+
+    const subject = `Admission Confirmation - ${programName}`;
+    const html = buildAdmissionEmailHtml({
+      studentName,
+      programName,
+      programCode,
+      intakeName,
+      academicYear,
+      registrationNumber,
+    });
+
+    try {
+      await sendEmail(email, subject, html);
+      sentCount++;
+      results.push({
+        studentId: student._id,
+        name: studentName,
+        email,
+        program: programName,
+        status: "Sent",
+      });
+    } catch (error) {
+      console.error(`Failed to send admission email to ${email}:`, error);
+      failedCount++;
+      results.push({
+        studentId: student._id,
+        name: studentName,
+        email,
+        program: programName,
+        status: "Failed",
+        reason: error.message || "Failed to send email.",
+      });
+    }
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Admission email sending process completed.",
+    totalStudents: students.length,
+    sent: sentCount,
+    failed: failedCount,
+    results,
   });
 });

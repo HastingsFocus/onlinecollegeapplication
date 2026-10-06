@@ -39,3 +39,11 @@ export const getStudentStatistics = async () => {
   const response = await api.get("/students/statistics");
   return response.data;
 };
+
+export const sendAdmissionEmails = async () => {
+  const response = await api.post(
+    "/students/send-admission-emails"
+  );
+
+  return response.data;
+};
