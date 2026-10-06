@@ -209,3 +209,99 @@ export const activateLecturerAccount = async (req, res) => {
         });
     }
 };
+
+export const getUsers = async (req, res) => {
+  try {
+    const {
+      search = "",
+      role = "",
+      status = "",
+      page = 1,
+      limit = 20,
+    } = req.query;
+
+    const query = {};
+
+    // Search by first name, last name, or email.
+    if (search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+      query.$or = [
+        { firstName: searchRegex },
+        { lastName: searchRegex },
+        { email: searchRegex },
+      ];
+    }
+
+    // Filter by role.
+    if (["admin", "lecturer", "student"].includes(role)) {
+      query.role = role;
+    }
+
+    // Filter by account status.
+    if (status === "active") query.isActive = true;
+    if (status === "inactive") query.isActive = false;
+
+    // Pagination bounds.
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const pageLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const skip = (currentPage - 1) * pageLimit;
+
+    const [users, totalUsers] = await Promise.all([
+      User.find(query)
+        .select(
+          "firstName lastName email role isActive isActivated createdAt updatedAt"
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageLimit),
+      User.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalUsers / pageLimit);
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      totalUsers,
+      totalPages,
+      currentPage,
+      pageLimit,
+      users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch users.",
+    });
+  }
+};
+
+export const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+            .select(
+                "firstName lastName email role isActive isActivated createdAt updatedAt"
+            );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            user
+        });
+
+    } catch (error) {
+        console.error("Error fetching user:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch user details."
+        });
+    }
+};

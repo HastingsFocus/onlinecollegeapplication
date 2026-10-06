@@ -8,6 +8,7 @@ import {
   FaBook,
   FaFileAlt,
   FaUserGraduate,
+  FaUsers,
   FaChevronDown,
   FaChevronRight,
 } from "react-icons/fa";
@@ -18,9 +19,7 @@ const Sidebar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  // =========================================
-  // SECTION STATES
-  // =========================================
+  // Section open states — initialised from the current URL.
   const [programsOpen, setProgramsOpen] = useState(
     location.pathname.startsWith("/lecturer/programs")
   );
@@ -28,9 +27,6 @@ const Sidebar = () => {
     location.pathname.startsWith("/lecturer/students")
   );
 
-  // =========================================
-  // HANDLERS
-  // =========================================
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -52,16 +48,12 @@ const Sidebar = () => {
         overflowY: "auto",
       }}
     >
-      {/* =========================================
-          LOGO
-      ========================================= */}
+      {/* LOGO */}
       <div style={{ padding: "20px", borderBottom: "1px solid #333" }}>
         <h2 style={{ margin: 0, textAlign: "center" }}>OCAS</h2>
       </div>
 
-      {/* =========================================
-          NAVIGATION
-      ========================================= */}
+      {/* NAVIGATION */}
       <div
         style={{
           flex: 1,
@@ -83,11 +75,20 @@ const Sidebar = () => {
           <span>Dashboard</span>
         </NavLink>
 
-        {/* =========================================
-            ADMIN LINKS
-        ========================================= */}
+        {/* ADMIN LINKS */}
         {user.role === "admin" && (
           <>
+            <NavLink
+              to="/admin/users"
+              style={({ isActive }) => ({
+                ...linkStyle,
+                background: isActive ? "#333" : "transparent",
+              })}
+            >
+              <FaUsers />
+              <span>User Management</span>
+            </NavLink>
+
             <NavLink
               to="/admin/lecturers/create"
               style={({ isActive }) => ({
@@ -112,14 +113,10 @@ const Sidebar = () => {
           </>
         )}
 
-        {/* =========================================
-            LECTURER LINKS
-        ========================================= */}
+        {/* LECTURER LINKS */}
         {user.role === "lecturer" && (
           <>
-            {/* =====================================
-                PROGRAMS SECTION
-            ===================================== */}
+            {/* PROGRAMS SECTION */}
             <div>
               <button
                 type="button"
@@ -143,7 +140,6 @@ const Sidebar = () => {
                 )}
               </button>
 
-              {/* PROGRAM SUB-MENU */}
               {programsOpen && (
                 <div
                   style={{
@@ -192,9 +188,7 @@ const Sidebar = () => {
               <span>Admissions</span>
             </NavLink>
 
-            {/* =====================================
-                STUDENTS SECTION
-            ===================================== */}
+            {/* STUDENTS SECTION */}
             <div>
               <button
                 type="button"
@@ -218,7 +212,6 @@ const Sidebar = () => {
                 )}
               </button>
 
-              {/* STUDENT SUB-MENU */}
               {studentsOpen && (
                 <div
                   style={{
@@ -270,9 +263,7 @@ const Sidebar = () => {
         </NavLink>
       </div>
 
-      {/* =========================================
-          LOGOUT
-      ========================================= */}
+      {/* LOGOUT */}
       <div style={{ padding: "15px", borderTop: "1px solid #333" }}>
         <button
           onClick={handleLogout}
@@ -298,7 +289,7 @@ const Sidebar = () => {
 };
 
 /* =========================================
-   MAIN LINK STYLE
+   LINK STYLES
 ========================================= */
 const linkStyle = {
   color: "white",
@@ -310,9 +301,6 @@ const linkStyle = {
   borderRadius: "8px",
 };
 
-/* =========================================
-   SUB LINK STYLE
-========================================= */
 const subLinkStyle = {
   color: "#ccc",
   textDecoration: "none",

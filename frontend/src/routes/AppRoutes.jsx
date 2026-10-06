@@ -12,6 +12,8 @@ import ProtectedRoute from "../components/ProtectedRoute";
 // ===============================
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import CreateLecturer from "../pages/admin/CreateLecturer";
+import Users from "../pages/admin/Users";
+import UserDetails from "../pages/admin/UserDetails";
 
 // ===============================
 // LECTURER
@@ -93,6 +95,22 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Users />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+  path="/admin/users/:id"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <UserDetails />
+    </ProtectedRoute>
+  }
+/>
 
         {/* =========================================
             LECTURER DASHBOARD
