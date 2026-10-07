@@ -1,60 +1,32 @@
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 
+const SIDEBAR_WIDTH = 250;
+const TOPBAR_HEIGHT = 70;
+
 const DashboardLayout = ({ children }) => {
+  return (
+    <div style={{ minHeight: "100vh", background: "#f5f5f5" }}>
+      {/* FIXED SIDEBAR */}
+      <Sidebar />
 
-    return (
+      {/* FIXED TOPBAR */}
+      <Topbar />
 
-        <div
-            style={{
-                display: "flex",
-                minHeight: "100vh",
-            }}
-        >
-
-            {/* LEFT SIDEBAR */}
-
-            <Sidebar />
-
-
-
-            {/* RIGHT SIDE */}
-
-            <div
-                style={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-
-                {/* TOPBAR */}
-
-                <Topbar />
-
-
-
-                {/* PAGE CONTENT */}
-
-                <div
-                    style={{
-                        padding: "20px",
-                    }}
-                >
-
-                    {children}
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-    );
-
+      {/* MAIN CONTENT — offset for fixed sidebar + topbar */}
+      <main
+        style={{
+          marginLeft: `${SIDEBAR_WIDTH}px`,
+          marginTop: `${TOPBAR_HEIGHT}px`,
+          padding: "30px",
+          minHeight: `calc(100vh - ${TOPBAR_HEIGHT}px)`,
+          boxSizing: "border-box",
+        }}
+      >
+        {children}
+      </main>
+    </div>
+  );
 };
-
 
 export default DashboardLayout;

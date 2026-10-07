@@ -37,17 +37,20 @@ const Sidebar = () => {
 
   return (
     <div
-      style={{
-        width: "250px",
-        minHeight: "100vh",
-        background: "#222",
-        color: "white",
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-        overflowY: "auto",
-      }}
-    >
+  style={{
+    width: "250px",
+    height: "100vh",
+    background: "#222",
+    color: "white",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    position: "fixed",   // 👈 pins it
+    top: 0,              // 👈 to the top
+    left: 0,             // 👈 and left
+    overflowY: "auto",   // 👈 its own scroll if links overflow
+  }}
+>
       {/* LOGO */}
       <div style={{ padding: "20px", borderBottom: "1px solid #333" }}>
         <h2 style={{ margin: 0, textAlign: "center" }}>OCAS</h2>

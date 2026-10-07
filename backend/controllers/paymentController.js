@@ -119,8 +119,7 @@ export const initiatePayment = asyncHandler(async (req, res) => {
 
     });
 
-  console.log("Gateway Response:");
-  console.log(gatewayResponse);
+  
 
  // ===========================================
 // Save gateway response

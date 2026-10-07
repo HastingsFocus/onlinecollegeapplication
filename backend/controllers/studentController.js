@@ -148,27 +148,7 @@ export const getMyApplication = async (req, res) => {
       });
     }
 
-    console.log("===== STUDENT APPLICATION STATUS =====");
-    console.log("Application ID:", application._id);
-    console.log("Status:", application.status);
-    console.log(
-      "First Choice:",
-      application.programChoice?.firstChoice
-    );
-    console.log(
-      "Second Choice:",
-      application.programChoice?.secondChoice
-    );
-    console.log(
-      "Third Choice:",
-      application.programChoice?.thirdChoice
-    );
-    console.log(
-      "Accepted Program:",
-      application.programChoice?.acceptedProgram
-    );
-    console.log("======================================");
-
+   
     res.status(200).json(application);
   } catch (error) {
     console.error("GET MY APPLICATION ERROR:", error);
@@ -522,10 +502,7 @@ export const getApplicationPrograms = async (req, res) => {
   try {
     const application = await getDraftApplication(req.user.id);
 
-    console.log("===== APPLICATION PROGRAM DEBUG =====");
-    console.log("Application ID:", application?._id);
-    console.log("Application Intake:", application?.intake);
-
+    
     if (!application.intake) {
       return res.status(400).json({
         message: "No intake has been selected for this application.",
@@ -535,10 +512,7 @@ export const getApplicationPrograms = async (req, res) => {
     const intake = await Intake.findById(application.intake)
       .populate("availablePrograms");
 
-    console.log("Intake ID:", intake?._id);
-    console.log("Intake Name:", intake?.name);
-    console.log("Available Programs:", intake?.availablePrograms);
-    console.log("====================================");
+    
 
     if (!intake) {
       return res.status(404).json({

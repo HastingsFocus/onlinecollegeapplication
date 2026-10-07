@@ -26,101 +26,108 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div style={{
-            minHeight: "100vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "#f5f5f5"
-        }}>
-            <div style={{
-                width: "400px",
-                background: "#fff",
-                padding: "30px",
-                borderRadius: "10px",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
-            }}>
-                <h2 style={{
-                    textAlign: "center",
-                    marginBottom: "20px"
-                }}>
-                    Forgot Password
-                </h2>
-                <p style={{
-                    textAlign: "center",
-                    marginBottom: "20px",
-                    color: "#666"
-                }}>
-                    Enter your email address and we'll send you a password reset link.
-                </p>
+        <div className="min-h-screen bg-neutral-950 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+                <div className="w-full max-w-md">
 
-                {error && (
-                    <div style={{
-                        background: "#fee2e2",
-                        color: "#dc2626",
-                        padding: "10px",
-                        marginBottom: "15px",
-                        borderRadius: "5px"
-                    }}>
-                        {error}
-                    </div>
-                )}
-
-                {success && (
-                    <div style={{
-                        background: "#dcfce7",
-                        color: "#16a34a",
-                        padding: "10px",
-                        marginBottom: "15px",
-                        borderRadius: "5px"
-                    }}>
-                        {success}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit}>
-                    <div style={{
-                        marginBottom: "15px"
-                    }}>
-                        <label>Email Address</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            style={{
-                                width: "100%",
-                                padding: "10px",
-                                marginTop: "5px",
-                                border: "1px solid #ccc",
-                                borderRadius: "5px",
-                                boxSizing: "border-box"
-                            }}
-                        />
+                    {/* Branding */}
+                    <div className="mb-8 text-center">
+                        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg">
+                            <span className="text-xl font-bold tracking-tight text-black">OC</span>
+                        </div>
+                        <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                            Online College Application System
+                        </h1>
+                        <p className="mt-2 text-sm text-neutral-400">
+                            Recover access to your account securely.
+                        </p>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            width: "100%",
-                            padding: "12px",
-                            border: "none",
-                            borderRadius: "5px",
-                            background: "#222",
-                            color: "#fff",
-                            cursor: "pointer"
-                        }}
-                    >
-                        {loading ? "Sending..." : "Send Reset Link"}
-                    </button>
-                </form>
+                    {/* Card */}
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl sm:p-8">
+                        <div className="mb-7">
+                            <h2 className="text-xl font-semibold tracking-tight text-neutral-900">
+                                Forgot your password?
+                            </h2>
+                            <p className="mt-2 text-sm leading-6 text-neutral-500">
+                                Enter the email address associated with your account and we'll send you a password reset link.
+                            </p>
+                        </div>
 
-                <div style={{
-                    textAlign: "center",
-                    marginTop: "20px"
-                }}>
-                    <Link to="/login">Back To Login</Link>
+                        {error && (
+                            <div
+                                role="alert"
+                                className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                            >
+                                {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div
+                                role="status"
+                                className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+                            >
+                                {success}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div>
+                                <label htmlFor="email" className="mb-2 block text-sm font-medium text-neutral-800">
+                                    Email address
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="you@example.com"
+                                    autoComplete="email"
+                                    required
+                                    className="
+                                        w-full rounded-lg border border-neutral-300
+                                        bg-white px-4 py-3 text-sm text-neutral-900
+                                        placeholder:text-neutral-400
+                                        outline-none transition-all duration-200
+                                        hover:border-neutral-400
+                                        focus:border-black
+                                        focus:ring-2 focus:ring-black/10
+                                    "
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="
+                                    flex w-full items-center justify-center
+                                    rounded-lg bg-black px-4 py-3
+                                    text-sm font-semibold text-white shadow-sm
+                                    transition-all duration-200
+                                    hover:bg-neutral-800 hover:shadow-md
+                                    active:scale-[0.99]
+                                    disabled:cursor-not-allowed disabled:opacity-50
+                                    focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2
+                                "
+                            >
+                                {loading ? "Sending..." : "Send Reset Link"}
+                            </button>
+                        </form>
+
+                        <div className="mt-7 border-t border-neutral-200 pt-6 text-center">
+                            <Link
+                                to="/login"
+                                className="text-sm font-semibold text-neutral-700 transition-colors hover:text-black"
+                            >
+                                ← Back to Login
+                            </Link>
+                        </div>
+                    </div>
+
+                    <p className="mt-6 text-center text-xs text-neutral-500">
+                        © {new Date().getFullYear()} Online College Application System
+                    </p>
                 </div>
             </div>
         </div>

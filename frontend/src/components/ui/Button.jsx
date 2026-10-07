@@ -8,13 +8,17 @@ const Button = ({
   variant = "primary",
 }) => {
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 active:scale-[0.98]";
 
   const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
+    primary:
+      "bg-black text-white shadow-sm hover:bg-neutral-800 hover:shadow-md",
+
     secondary:
-      "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
-    danger: "bg-red-600 text-white hover:bg-red-700",
+      "border border-neutral-300 bg-white text-neutral-900 shadow-sm hover:bg-neutral-50 hover:border-neutral-400",
+
+    danger:
+      "bg-neutral-900 text-white shadow-sm hover:bg-black hover:shadow-md",
   };
 
   return (
@@ -30,3 +34,4 @@ const Button = ({
 };
 
 export default Button;
+

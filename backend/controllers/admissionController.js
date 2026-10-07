@@ -109,13 +109,7 @@ export const getApplicationDetails = asyncHandler(async (req, res) => {
     throw new Error("Application not found.");
   }
 
-  console.log("===== APPLICATION DETAILS DEBUG =====");
-  console.log(
-    "Accepted Programme:",
-    application.programChoice?.acceptedProgram
-  );
-  console.log("=====================================");
-
+  
   res.status(200).json({
     success: true,
     application,
@@ -189,10 +183,7 @@ export const acceptApplication = asyncHandler(async (req, res) => {
    * the applicant's original choices.
    */
   if (!choiceIds.includes(acceptedProgramId)) {
-    console.log("===== ACCEPT PROGRAM DEBUG =====");
-    console.log("Selected programme:", acceptedProgramId);
-    console.log("Applicant choices:", choiceIds);
-    console.log("================================");
+    
 
     res.status(400);
     throw new Error(
@@ -242,11 +233,7 @@ export const acceptApplication = asyncHandler(async (req, res) => {
 
   await application.save();
 
-  console.log("===== APPLICATION ACCEPTED =====");
-  console.log("Application ID:", application._id);
-  console.log("Accepted Programme ID:", application.programChoice.acceptedProgram);
-  console.log("Status:", application.status);
-  console.log("================================");
+  
 
   /*
    * Get the updated application with all

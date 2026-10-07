@@ -2,12 +2,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-console.log("EMAIL CONFIG:", {
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    user: process.env.EMAIL_USER,
-    hasPassword: !!process.env.EMAIL_PASS
-});
 
 import express from "express";
 import cors from "cors";
